@@ -3,7 +3,7 @@ window.addEventListener("load", function () {
   const ctx = canvas.getContext("2d");
   const CANVAS_WIDTH = canvas.width = 768;
   const CANVAS_HEIGHT = canvas.height = 432;
-  const gameSpeed = 5;
+  let backgroundSpeed = 0;
 
   class InputHandler {
     constructor() {
@@ -15,7 +15,7 @@ window.addEventListener("load", function () {
             e.key === "ArrowUp" ||
             e.key === "ArrowLeft" ||
             e.key === "ArrowRight") &&
-          this.keys.indexOf(e.key) === -1
+          !this.keys.includes(e.key)
         ) {
           this.keys.push(e.key);
         }
@@ -73,7 +73,6 @@ window.addEventListener("load", function () {
       } else if (input.keys.includes("ArrowLeft")) {
         this.speedX = -5;
       }
-      // vertical movement
       else if (input.keys.includes("ArrowUp") && this.onGround()) {
         this.speedY -= 20;
       } else {
@@ -83,9 +82,17 @@ window.addEventListener("load", function () {
       // horizontal movement
       this.x += this.speedX;
       // horizontal boundaries
-      if (this.x < 0) this.x = 0;
-      else if (this.x > this.gameWidth - this.width)
+      if (this.x < 0) {
+        this.x = 0;
+        backgroundSpeed = 2;
+      }
+      else if (this.x > this.gameWidth - this.width) {
         this.x = this.gameWidth - this.width;
+        backgroundSpeed = -2;
+      }
+      else {
+        backgroundSpeed = 0;
+      }
       // vertical movement
       this.y += this.speedY;
       if (!this.onGround()) {
@@ -112,17 +119,27 @@ window.addEventListener("load", function () {
         this.image = image;
         this.speedModifier = speedModifier;
         this.x = 0;
-        this.x2 = this.x+this.width;
+        this.x2 = 0;
         this.y = 0;
-        this.speed = gameSpeed * this.speedModifier;
+        this.speed = backgroundSpeed * this.speedModifier;
     }
     update() {
-        this.speed = gameSpeed * this.speedModifier;  
+        this.speed = backgroundSpeed * this.speedModifier;  
+        this.x = this.x + this.speed;
+        // reset image1 position if off-limits
         if (this.x < 0 - this.width) {
             this.x = 0;
         }
-        this.x = this.x - this.speed;
-        this.x2 = this.x+this.width;
+        else if(this.x > this.width) {
+            this.x = 0;
+        }
+        // positions image2 to left or right 
+        if(this.x <= 0) {
+            this.x2 = this.x+this.width;
+        }
+        else {
+            this.x2 = this.x-this.width;
+        }
     }
     draw(context) {
         context.drawImage(this.image, this.x, this.y, this.width, this.height);
