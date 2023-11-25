@@ -46,7 +46,7 @@ window.addEventListener("load", function () {
       this.frameY = 0;
       this.speedX = 0;
       this.speedY = 0;
-      this.weight = 1;
+      this.weight = 0.8;
       this.image = document.getElementById("imgGoblin");
     }
 
@@ -84,11 +84,11 @@ window.addEventListener("load", function () {
       // horizontal boundaries
       if (this.x < 0) {
         this.x = 0;
-        backgroundSpeed = 2;
+        backgroundSpeed = -this.speedX;
       }
       else if (this.x > this.gameWidth - this.width) {
         this.x = this.gameWidth - this.width;
-        backgroundSpeed = -2;
+        backgroundSpeed = -this.speedX;
       }
       else {
         backgroundSpeed = 0;
