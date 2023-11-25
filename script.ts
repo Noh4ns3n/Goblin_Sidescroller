@@ -63,12 +63,12 @@ window.addEventListener("load", function () {
     }
     handleInput(input){
       if (input.keys.includes("ArrowRight")) {
-        this.player.setState(STATES.RUNNING);
         this.player.facing="R";
+        this.player.setState(STATES.RUNNING);
       } 
       else if (input.keys.includes("ArrowLeft")) {
-        this.player.setState(STATES.RUNNING);
         this.player.facing="L";
+        this.player.setState(STATES.RUNNING);
       }
     if(input.keys.includes('ArrowUp')) this.player.setState(STATES.JUMPING);
     this.player.changeSpritesheet();
@@ -87,6 +87,14 @@ window.addEventListener("load", function () {
       this.player.changeSpritesheet();
     }
     handleInput(input){
+      if (input.keys.includes("ArrowRight")) {
+        this.player.facing="R";
+        this.player.changeSpritesheet();
+      } 
+      else if (input.keys.includes("ArrowLeft")) {
+        this.player.facing="L";
+        this.player.changeSpritesheet();
+      }
       if (input.keys.includes("ArrowUp")) this.player.setState(STATES.JUMPING);
       if (this.player.speedX === 0) this.player.setState(STATES.STILL);
   }
