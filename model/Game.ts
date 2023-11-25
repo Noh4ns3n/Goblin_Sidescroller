@@ -3,6 +3,7 @@ import { Background } from "./Background";
 import { Enemy } from "./Enemy";
 import { InputHandler } from "./InputHandler";
 import { Player } from "./Player";
+import "../scripts/require.js";
 
 export class Game {
     input: InputHandler;

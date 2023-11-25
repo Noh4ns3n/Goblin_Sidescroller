@@ -5,6 +5,14 @@ window.addEventListener("load", function () {
   const ctx = canvas.getContext("2d");
   const CANVAS_WIDTH = (canvas.width = 768);
   const CANVAS_HEIGHT = (canvas.height = 432);
+  const STATES = {
+    STILL: 0,
+    RUNNING: 1,
+    JUMPING: 2,
+    FALLING: 3,
+  };
+
+  
   class InputHandler {
     keys: any[];
     constructor() {
@@ -35,18 +43,100 @@ window.addEventListener("load", function () {
     }
   }
 
+  class State {
+    state: String;
+    constructor(state) {
+      this.state = state;
+    }
+  }
+  
+  class Still extends State {
+    player: Player;
+
+    constructor(player) {
+      super('STILL');
+      this.player = player;
+    }
+    enter() {
+      this.player.animation="still";
+      this.player.changeSpritesheet();
+    }
+    handleInput(input){
+      if (input.keys.includes("ArrowRight")) {
+        this.player.setState(STATES.RUNNING);
+        this.player.facing="R";
+      } 
+      else if (input.keys.includes("ArrowLeft")) {
+        this.player.setState(STATES.RUNNING);
+        this.player.facing="L";
+      }
+    if(input.keys.includes('ArrowUp')) this.player.setState(STATES.JUMPING);
+    this.player.changeSpritesheet();
+
+  }
+}
+  class Running extends State {
+    player: Player;
+
+    constructor(player) {
+      super('RUNNING');
+      this.player = player;
+    }
+    enter() {
+      this.player.animation="running";
+      this.player.changeSpritesheet();
+    }
+    handleInput(input){
+      if (input.keys.includes("ArrowUp")) this.player.setState(STATES.JUMPING);
+      if (this.player.speedX === 0) this.player.setState(STATES.STILL);
+  }
+}
+
+  class Jumping extends State {
+    player: Player;
+
+    constructor(player) {
+      super('JUMPING');
+      this.player = player;
+    }
+    enter() {
+      this.player.animation="running";
+      this.player.changeSpritesheet();
+    }
+    handleInput(input){
+      if(this.player.speedY > this.player.weight) {
+        this.player.setState(STATES.FALLING);
+      }
+    }
+  }
+  class Falling extends State {
+    player: Player;
+
+    constructor(player) {
+      super('FALLING');
+      this.player = player;
+    }
+    enter() {
+      this.player.animation="running";
+      this.player.changeSpritesheet();
+    }
+    handleInput(input){
+      if(this.player.onGround()) {
+        this.player.setState(STATES.STILL);
+      }
+    }
+  }
   class Player {
     image: HTMLImageElement | null;
     facing: string;
     animation: string;
-    gameWidth: any;
-    gameHeight: any;
     width: number;
     height: number;
     leftLimit: number;
     rightLimit: number;
     yOffset: number;
     groundLimit: number;
+    traveledX: number;
     x: number;
     y: number;
     speedX: number;
@@ -64,13 +154,17 @@ window.addEventListener("load", function () {
     frameTimer: number;
     background: Background;
     game: Game;
+    states: State[];
+    currentState : any;
 
     constructor(game) {
       this.game = game;
+      this.states = [new Still(this), new Running(this), new Jumping(this), new Falling(this)];
+      this.currentState = this.states[0];
+      this.currentState.enter();
       this.image = document.getElementById("imgGoblin") as HTMLImageElement;
       this.facing = "R"; // R = right, L = left
       this.animation = "still";
-
       this.width = 66; // displayed width
       this.height = 61; // displayed height
       this.leftLimit = 0;
@@ -81,6 +175,7 @@ window.addEventListener("load", function () {
       this.y = this.groundLimit;
       this.speedX = 0;
       this.speedXModifier = 3;
+      this.traveledX = 0;
       this.speedY = 0;
       this.weight = 1.2;
       this.sourceWidth = 66; // width of each sprite on spritesheet
@@ -92,6 +187,7 @@ window.addEventListener("load", function () {
       this.frameRow = Math.floor(this.frame / this.maxFrameCol);
       this.fps = 15;
       this.frameTimer = 0;
+
     }
 
     draw(context) {
@@ -115,16 +211,16 @@ window.addEventListener("load", function () {
       if (input.keys.includes("ArrowRight")) {
         this.speedX = this.speedXModifier;
         this.facing = "R";
-        this.changeSpritesheet("running");
       } else if (input.keys.includes("ArrowLeft")) {
         this.speedX = -this.speedXModifier;
         this.facing = "L";
-        this.changeSpritesheet("running");
       } else {
         this.speedX = 0;
-        this.changeSpritesheet("still");
       }
       this.x += this.speedX;
+      this.traveledX += this.speedX;
+      this.currentState.handleInput(input);
+      
       // horizontal boundaries
       if (this.x < this.leftLimit) {
         this.x = 0;
@@ -137,12 +233,12 @@ window.addEventListener("load", function () {
       }
       // vertical movement
       if (input.keys.includes("ArrowUp") && this.onGround()) {
-        this.speedY -= 20;
+        this.speedY -= 20
       }
       this.y += this.speedY;
+      
       if (!this.onGround()) {
         this.speedY += this.weight;
-        this.changeSpritesheet("running");
       } else {
         this.speedY = 0;
       }
@@ -152,6 +248,8 @@ window.addEventListener("load", function () {
       // ----- ANIMATION
       // update player frame only when above fps interval
       if (this.frameTimer > 1000 / this.fps) {
+      console.log('this.currentState :>> ', this.currentState);
+
         this.frameTimer = 0;
         // if reached end of spritesheet, repositions to start of spritesheet
         if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
@@ -167,11 +265,15 @@ window.addEventListener("load", function () {
       }
     }
 
-    changeSpritesheet(animation) {
-      this.animation = animation;
+    changeSpritesheet() {
       if (this.image) {
         this.image.src = `assets/img/characters/goblin/goblin_${this.animation}_${this.facing}_spritesheet.png`;
       }
+    }
+
+    setState(state) {
+      this.currentState = this.states[state];
+      this.currentState.enter();
     }
 
     onGround() {
@@ -392,6 +494,8 @@ window.addEventListener("load", function () {
 
     displayStatusText() {}
   }
+
+ 
 
   const game = new Game(ctx);
   game.animate(0);

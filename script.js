@@ -1,9 +1,30 @@
 // WIP : add hitbox ; add score
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 window.addEventListener("load", function () {
     var canvas = document.getElementById("canvas1");
     var ctx = canvas.getContext("2d");
     var CANVAS_WIDTH = (canvas.width = 768);
     var CANVAS_HEIGHT = (canvas.height = 432);
+    var STATES = {
+        STILL: 0,
+        RUNNING: 1,
+        JUMPING: 2,
+        FALLING: 3,
+    };
     var InputHandler = /** @class */ (function () {
         function InputHandler() {
             var _this = this;
@@ -28,9 +49,99 @@ window.addEventListener("load", function () {
         }
         return InputHandler;
     }());
+    var State = /** @class */ (function () {
+        function State(state) {
+            this.state = state;
+        }
+        return State;
+    }());
+    var Still = /** @class */ (function (_super) {
+        __extends(Still, _super);
+        function Still(player) {
+            var _this = _super.call(this, 'STILL') || this;
+            _this.player = player;
+            return _this;
+        }
+        Still.prototype.enter = function () {
+            this.player.animation = "still";
+            this.player.changeSpritesheet();
+        };
+        Still.prototype.handleInput = function (input) {
+            if (input.keys.includes("ArrowRight")) {
+                this.player.setState(STATES.RUNNING);
+                this.player.facing = "R";
+            }
+            else if (input.keys.includes("ArrowLeft")) {
+                this.player.setState(STATES.RUNNING);
+                this.player.facing = "L";
+            }
+            if (input.keys.includes('ArrowUp'))
+                this.player.setState(STATES.JUMPING);
+            this.player.changeSpritesheet();
+        };
+        return Still;
+    }(State));
+    var Running = /** @class */ (function (_super) {
+        __extends(Running, _super);
+        function Running(player) {
+            var _this = _super.call(this, 'RUNNING') || this;
+            _this.player = player;
+            return _this;
+        }
+        Running.prototype.enter = function () {
+            this.player.animation = "running";
+            this.player.changeSpritesheet();
+        };
+        Running.prototype.handleInput = function (input) {
+            if (input.keys.includes("ArrowUp"))
+                this.player.setState(STATES.JUMPING);
+            if (this.player.speedX === 0)
+                this.player.setState(STATES.STILL);
+        };
+        return Running;
+    }(State));
+    var Jumping = /** @class */ (function (_super) {
+        __extends(Jumping, _super);
+        function Jumping(player) {
+            var _this = _super.call(this, 'JUMPING') || this;
+            _this.player = player;
+            return _this;
+        }
+        Jumping.prototype.enter = function () {
+            this.player.animation = "running";
+            this.player.changeSpritesheet();
+        };
+        Jumping.prototype.handleInput = function (input) {
+            if (this.player.speedY > this.player.weight) {
+                this.player.setState(STATES.FALLING);
+            }
+        };
+        return Jumping;
+    }(State));
+    var Falling = /** @class */ (function (_super) {
+        __extends(Falling, _super);
+        function Falling(player) {
+            var _this = _super.call(this, 'FALLING') || this;
+            _this.player = player;
+            return _this;
+        }
+        Falling.prototype.enter = function () {
+            this.player.animation = "running";
+            this.player.changeSpritesheet();
+        };
+        Falling.prototype.handleInput = function (input) {
+            if (this.player.onGround()) {
+                this.player.setState(STATES.STILL);
+            }
+        };
+        return Falling;
+    }(State));
     var Player = /** @class */ (function () {
         function Player(game) {
             this.game = game;
+            this.states = [new Still(this), new Running(this), new Jumping(this), new Falling(this)];
+            this.currentState = this.states[0];
+            this.currentState.enter();
             this.image = document.getElementById("imgGoblin");
             this.facing = "R"; // R = right, L = left
             this.animation = "still";
@@ -44,6 +155,7 @@ window.addEventListener("load", function () {
             this.y = this.groundLimit;
             this.speedX = 0;
             this.speedXModifier = 3;
+            this.traveledX = 0;
             this.speedY = 0;
             this.weight = 1.2;
             this.sourceWidth = 66; // width of each sprite on spritesheet
@@ -70,18 +182,17 @@ window.addEventListener("load", function () {
             if (input.keys.includes("ArrowRight")) {
                 this.speedX = this.speedXModifier;
                 this.facing = "R";
-                this.changeSpritesheet("running");
             }
             else if (input.keys.includes("ArrowLeft")) {
                 this.speedX = -this.speedXModifier;
                 this.facing = "L";
-                this.changeSpritesheet("running");
             }
             else {
                 this.speedX = 0;
-                this.changeSpritesheet("still");
             }
             this.x += this.speedX;
+            this.traveledX += this.speedX;
+            this.currentState.handleInput(input);
             // horizontal boundaries
             if (this.x < this.leftLimit) {
                 this.x = 0;
@@ -101,7 +212,6 @@ window.addEventListener("load", function () {
             this.y += this.speedY;
             if (!this.onGround()) {
                 this.speedY += this.weight;
-                this.changeSpritesheet("running");
             }
             else {
                 this.speedY = 0;
@@ -112,6 +222,7 @@ window.addEventListener("load", function () {
             // ----- ANIMATION
             // update player frame only when above fps interval
             if (this.frameTimer > 1000 / this.fps) {
+                console.log('this.currentState :>> ', this.currentState);
                 this.frameTimer = 0;
                 // if reached end of spritesheet, repositions to start of spritesheet
                 if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
@@ -128,11 +239,14 @@ window.addEventListener("load", function () {
                 this.frameTimer += deltaTime;
             }
         };
-        Player.prototype.changeSpritesheet = function (animation) {
-            this.animation = animation;
+        Player.prototype.changeSpritesheet = function () {
             if (this.image) {
                 this.image.src = "assets/img/characters/goblin/goblin_".concat(this.animation, "_").concat(this.facing, "_spritesheet.png");
             }
+        };
+        Player.prototype.setState = function (state) {
+            this.currentState = this.states[state];
+            this.currentState.enter();
         };
         Player.prototype.onGround = function () {
             return this.y >= this.game.height - this.height;
