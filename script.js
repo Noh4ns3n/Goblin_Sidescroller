@@ -5,7 +5,7 @@ window.addEventListener("load", function () {
     var CANVAS_WIDTH = (canvas.width = 768);
     var CANVAS_HEIGHT = (canvas.height = 432);
     var backgroundSpeed = 0;
-    var enemies = []; // TODO typer
+    var enemies = [];
     var InputHandler = /** @class */ (function () {
         function InputHandler() {
             var _this = this;
@@ -41,11 +41,14 @@ window.addEventListener("load", function () {
             this.height = 61; // displayed height
             this.leftLimit = 0;
             this.rightLimit = this.gameWidth - this.width;
+            this.yOffset = 4; // account for character position offset on spritesheet
+            this.groundLimit = this.gameHeight - this.height + this.yOffset;
             this.x = 0;
-            this.y = this.gameHeight - this.height;
+            this.y = this.groundLimit;
             this.speedX = 0;
+            this.speedXModifier = 3;
             this.speedY = 0;
-            this.weight = 1;
+            this.weight = 1.2;
             this.sourceWidth = 66; // width of each sprite on spritesheet
             this.sourceHeight = 61; // height of each sprite on spritesheet
             this.maxFrameCol = 6; // number of columns on spritesheet
@@ -53,15 +56,9 @@ window.addEventListener("load", function () {
             this.frame = 0;
             this.frameCol = this.frame % this.maxFrameCol;
             this.frameRow = Math.floor(this.frame / this.maxFrameCol);
-            this.fps = 10;
+            this.fps = 15;
             this.frameTimer = 0;
         }
-        Player.prototype.changeSpritesheet = function (animation) {
-            this.animation = animation;
-            if (this.image) {
-                this.image.src = "assets/img/characters/goblin/goblin_".concat(this.animation, "_").concat(this.facing, "_spritesheet.png");
-            }
-        };
         Player.prototype.draw = function (context) {
             // see https://www.youtube.com/watch?v=7JtLHJbm0kA&t=830s
             context.drawImage(this.image, this.frameCol * this.sourceWidth, // sx
@@ -71,42 +68,22 @@ window.addEventListener("load", function () {
             this.x, this.y, this.width, this.height);
         };
         Player.prototype.update = function (input, deltaTime) {
+            // ----- MOVEMENT
+            // horizontal movement
             if (input.keys.includes("ArrowRight")) {
-                this.speedX = 3;
+                this.speedX = this.speedXModifier;
                 this.facing = "R";
                 this.changeSpritesheet("running");
             }
             else if (input.keys.includes("ArrowLeft")) {
-                this.speedX = -3;
+                this.speedX = -this.speedXModifier;
                 this.facing = "L";
                 this.changeSpritesheet("running");
-            }
-            else if (input.keys.includes("ArrowUp") && this.onGround()) {
-                this.speedY -= 20;
             }
             else {
                 this.speedX = 0;
                 this.changeSpritesheet("still");
             }
-            // animation
-            // update player frame only when above fps interval
-            if (this.frameTimer > 1000 / this.fps) {
-                // if reached end of spritesheet, repositions to start of spritesheet
-                if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
-                    this.frame = 0;
-                }
-                else {
-                    this.frame++;
-                }
-                this.frameTimer = 0;
-                // cycle through spritesheet rows/columns
-                this.frameCol = this.frame % this.maxFrameCol;
-                this.frameRow = Math.floor(this.frame / this.maxFrameCol);
-            }
-            else {
-                this.frameTimer += deltaTime;
-            }
-            // horizontal movement
             this.x += this.speedX;
             // horizontal boundaries
             if (this.x < this.leftLimit) {
@@ -121,6 +98,9 @@ window.addEventListener("load", function () {
                 backgroundSpeed = 0;
             }
             // vertical movement
+            if (input.keys.includes("ArrowUp") && this.onGround()) {
+                this.speedY -= 20;
+            }
             this.y += this.speedY;
             if (!this.onGround()) {
                 this.speedY += this.weight;
@@ -130,8 +110,32 @@ window.addEventListener("load", function () {
                 this.speedY = 0;
             }
             // vertical boundaries
-            if (this.y > this.gameHeight - this.height)
-                this.y = this.gameHeight - this.height;
+            if (this.y > this.groundLimit)
+                this.y = this.groundLimit;
+            // ----- ANIMATION
+            // update player frame only when above fps interval
+            if (this.frameTimer > 1000 / this.fps) {
+                this.frameTimer = 0;
+                // if reached end of spritesheet, repositions to start of spritesheet
+                if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
+                    this.frame = 0;
+                }
+                else {
+                    this.frame++;
+                }
+                // cycle through spritesheet rows/columns
+                this.frameCol = this.frame % this.maxFrameCol;
+                this.frameRow = Math.floor(this.frame / this.maxFrameCol);
+            }
+            else {
+                this.frameTimer += deltaTime;
+            }
+        };
+        Player.prototype.changeSpritesheet = function (animation) {
+            this.animation = animation;
+            if (this.image) {
+                this.image.src = "assets/img/characters/goblin/goblin_".concat(this.animation, "_").concat(this.facing, "_spritesheet.png");
+            }
         };
         Player.prototype.onGround = function () {
             return this.y >= this.gameHeight - this.height;
@@ -204,7 +208,8 @@ window.addEventListener("load", function () {
             this.width = 60; // displayed width
             this.height = 60; // displayed height
             this.x = this.gameWidth;
-            this.y = this.gameHeight - this.height + 8;
+            this.yOffset = 8; // account for character offset on sprite
+            this.y = this.gameHeight - this.height + this.yOffset;
             this.speedX = 2;
             this.maxFrameCol = 4; // number of columns on spritesheet
             this.maxFrameRow = 2; // number or rows on spritesheet
@@ -213,7 +218,7 @@ window.addEventListener("load", function () {
             this.frame = 0;
             this.frameCol = this.frame % this.maxFrameCol;
             this.frameRow = Math.floor(this.frame / this.maxFrameCol);
-            this.fps = 10;
+            this.fps = 15;
             this.frameTimer = 0;
         }
         Enemy.prototype.draw = function (context) {
