@@ -4,8 +4,6 @@ window.addEventListener("load", function () {
     var ctx = canvas.getContext("2d");
     var CANVAS_WIDTH = (canvas.width = 768);
     var CANVAS_HEIGHT = (canvas.height = 432);
-    var backgroundSpeed = 0;
-    var enemies = [];
     var InputHandler = /** @class */ (function () {
         function InputHandler() {
             var _this = this;
@@ -31,18 +29,17 @@ window.addEventListener("load", function () {
         return InputHandler;
     }());
     var Player = /** @class */ (function () {
-        function Player(gameWidth, gameHeight) {
+        function Player(game) {
+            this.game = game;
             this.image = document.getElementById("imgGoblin");
             this.facing = "R"; // R = right, L = left
             this.animation = "still";
-            this.gameWidth = gameWidth;
-            this.gameHeight = gameHeight;
             this.width = 66; // displayed width
             this.height = 61; // displayed height
             this.leftLimit = 0;
-            this.rightLimit = this.gameWidth - this.width;
+            this.rightLimit = this.game.width - this.width;
             this.yOffset = 4; // account for character position offset on spritesheet
-            this.groundLimit = this.gameHeight - this.height + this.yOffset;
+            this.groundLimit = this.game.height - this.height + this.yOffset;
             this.x = 0;
             this.y = this.groundLimit;
             this.speedX = 0;
@@ -88,14 +85,14 @@ window.addEventListener("load", function () {
             // horizontal boundaries
             if (this.x < this.leftLimit) {
                 this.x = 0;
-                backgroundSpeed = -this.speedX;
+                this.game.background.speedX = -this.speedX;
             }
             else if (this.x > this.rightLimit) {
-                this.x = this.gameWidth - this.width;
-                backgroundSpeed = -this.speedX;
+                this.x = this.game.width - this.width;
+                this.game.background.speedX = -this.speedX;
             }
             else {
-                backgroundSpeed = 0;
+                this.game.background.speedX = 0;
             }
             // vertical movement
             if (input.keys.includes("ArrowUp") && this.onGround()) {
@@ -138,23 +135,24 @@ window.addEventListener("load", function () {
             }
         };
         Player.prototype.onGround = function () {
-            return this.y >= this.gameHeight - this.height;
+            return this.y >= this.game.height - this.height;
         };
         return Player;
     }());
     var Layer = /** @class */ (function () {
-        function Layer(image, speedModifier) {
-            this.width = CANVAS_WIDTH;
-            this.height = CANVAS_HEIGHT;
+        function Layer(background, image, speedModifier) {
+            this.background = background;
+            this.width = this.background.width;
+            this.height = this.background.height;
             this.image = image;
             this.speedModifier = speedModifier;
             this.x = 0;
             this.x2 = 0;
             this.y = 0;
-            this.speed = backgroundSpeed * this.speedModifier;
+            this.speed = this.background.speedX * this.speedModifier;
         }
         Layer.prototype.update = function () {
-            this.speed = backgroundSpeed * this.speedModifier;
+            this.speed = this.background.speedX * this.speedModifier;
             this.x = this.x + this.speed;
             // reset image1 position if off-limits
             if (this.x < 0 - this.width) {
@@ -178,15 +176,18 @@ window.addEventListener("load", function () {
         return Layer;
     }());
     var Background = /** @class */ (function () {
-        function Background(gameWidth, gameHeight, layers) {
-            this.gameWidth = gameWidth;
-            this.gameHeight = gameHeight;
-            this.layers = LAYERS;
+        function Background() {
             this.x = 0;
             this.y = 0;
-            this.speedX = 1;
             this.width = CANVAS_WIDTH;
             this.height = CANVAS_HEIGHT;
+            this.speedX = 0;
+            var layer1 = new Layer(this, document.getElementById("imgPlx1"), 0.2);
+            var layer2 = new Layer(this, document.getElementById("imgPlx2"), 0.4);
+            var layer3 = new Layer(this, document.getElementById("imgPlx3"), 0.6);
+            var layer4 = new Layer(this, document.getElementById("imgPlx4"), 0.8);
+            var layer5 = new Layer(this, document.getElementById("imgPlx5"), 1.0);
+            this.layers = [layer1, layer2, layer3, layer4, layer5];
         }
         Background.prototype.draw = function (context) {
             this.layers.forEach(function (layer) {
@@ -201,15 +202,14 @@ window.addEventListener("load", function () {
         return Background;
     }());
     var Enemy = /** @class */ (function () {
-        function Enemy(gameWidth, gameHeight) {
+        function Enemy(game) {
+            this.game = game;
             this.image = document.getElementById("imgBoar");
-            this.gameWidth = gameWidth;
-            this.gameHeight = gameHeight;
             this.width = 60; // displayed width
             this.height = 60; // displayed height
-            this.x = this.gameWidth;
+            this.x = this.game.width;
             this.yOffset = 8; // account for character offset on sprite
-            this.y = this.gameHeight - this.height + this.yOffset;
+            this.y = this.game.height - this.height + this.yOffset;
             this.speedX = 2;
             this.maxFrameCol = 4; // number of columns on spritesheet
             this.maxFrameRow = 2; // number or rows on spritesheet
@@ -252,44 +252,51 @@ window.addEventListener("load", function () {
         };
         return Enemy;
     }());
-    function handleEnemies(deltaTime) {
-        if (enemyTimer > enemyInterval + randomEnemyInterval) {
-            enemies.push(new Enemy(CANVAS_WIDTH, CANVAS_HEIGHT));
-            randomEnemyInterval = Math.random() * 1000;
-            enemyTimer = 0;
+    var Game = /** @class */ (function () {
+        function Game(context) {
+            var _this = this;
+            this.animate = function (timeStamp) {
+                var deltaTime = timeStamp - _this.lastTime;
+                _this.lastTime = timeStamp;
+                _this.context.clearRect(0, 0, _this.width, _this.height);
+                _this.background.draw(_this.context);
+                _this.background.update();
+                _this.player.draw(_this.context);
+                _this.player.update(_this.input, deltaTime);
+                _this.handleEnemies(deltaTime);
+                requestAnimationFrame(_this.animate);
+            };
+            this.context = context;
+            this.height = CANVAS_HEIGHT;
+            this.width = CANVAS_WIDTH;
+            this.lastTime = 0;
+            this.enemyInterval = 1000;
+            this.randomEnemyInterval = Math.random() * 1000 + 500;
+            this.enemyTimer = 0;
+            this.enemies = [];
+            this.input = new InputHandler();
+            this.background = new Background();
+            this.player = new Player(this);
         }
-        else {
-            enemyTimer += deltaTime;
-        }
-        enemies.forEach(function (enemy) {
-            enemy.draw(ctx);
-            enemy.update(deltaTime);
-        });
-    }
-    function displayStatusText() { }
-    var input = new InputHandler();
-    var player = new Player(CANVAS_WIDTH, CANVAS_HEIGHT);
-    var lastTime = 0;
-    var enemyInterval = 1000;
-    var randomEnemyInterval = Math.random() * 1000 + 500;
-    var enemyTimer = 0;
-    var layer1 = new Layer(document.getElementById("imgPlx1"), 0.2);
-    var layer2 = new Layer(document.getElementById("imgPlx2"), 0.4);
-    var layer3 = new Layer(document.getElementById("imgPlx3"), 0.6);
-    var layer4 = new Layer(document.getElementById("imgPlx4"), 0.8);
-    var layer5 = new Layer(document.getElementById("imgPlx5"), 1.0);
-    var LAYERS = [layer1, layer2, layer3, layer4, layer5];
-    var background = new Background(CANVAS_WIDTH, CANVAS_HEIGHT, LAYERS);
-    function animate(timeStamp) {
-        var deltaTime = timeStamp - lastTime;
-        lastTime = timeStamp;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        background.draw(ctx);
-        background.update();
-        player.draw(ctx);
-        player.update(input, deltaTime);
-        handleEnemies(deltaTime);
-        requestAnimationFrame(animate);
-    }
-    animate(0);
+        Game.prototype.handleEnemies = function (deltaTime) {
+            var _this = this;
+            var _a;
+            if (this.enemyTimer > this.enemyInterval + this.randomEnemyInterval) {
+                this.enemies.push(new Enemy(this));
+                this.randomEnemyInterval = Math.random() * 1000;
+                this.enemyTimer = 0;
+            }
+            else {
+                this.enemyTimer += deltaTime;
+            }
+            (_a = this.enemies) === null || _a === void 0 ? void 0 : _a.forEach(function (enemy) {
+                enemy === null || enemy === void 0 ? void 0 : enemy.draw(_this.context);
+                enemy === null || enemy === void 0 ? void 0 : enemy.update(deltaTime);
+            });
+        };
+        Game.prototype.displayStatusText = function () { };
+        return Game;
+    }());
+    var game = new Game(ctx);
+    game.animate(0);
 });
