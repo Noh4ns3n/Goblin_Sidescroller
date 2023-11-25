@@ -1,3 +1,5 @@
+// WIP : add hitbox ; add score
+
 window.addEventListener("load", function () {
   const canvas = document.getElementById("canvas1");
   const ctx = canvas.getContext("2d");
@@ -44,16 +46,16 @@ window.addEventListener("load", function () {
       this.gameHeight = gameHeight;
       this.width = 66; // displayed width
       this.height = 61; // displayed height
-      this.sourceWidth = 66; // width of each sprite on spritesheet
-      this.sourceHeight = 61; // height of each sprite on spritesheet
       this.leftLimit = 0;
       this.rightLimit = this.gameWidth - this.width;
       this.x = 0;
       this.y = this.gameHeight - this.height;
       this.speedX = 0;
       this.speedY = 0;
-      this.weight = 0.8;
+      this.weight = 1;
 
+      this.sourceWidth = 66; // width of each sprite on spritesheet
+      this.sourceHeight = 61; // height of each sprite on spritesheet
       this.maxFrameCol = 6; // number of columns on spritesheet
       this.maxFrameRow = 4; // number or rows on spritesheet
       this.frame = 0;
@@ -209,14 +211,14 @@ window.addEventListener("load", function () {
       this.gameHeight = gameHeight;
       this.width = 60; // displayed width
       this.height = 60; // displayed height
-      this.sourceWidth = 124; // width of each sprite on spritesheet
-      this.sourceHeight = 124; // height of each sprite on spritesheet
       this.x = this.gameWidth;
       this.y = this.gameHeight - this.height + 8;
       this.speedX = 2;
 
       this.maxFrameCol = 4; // number of columns on spritesheet
       this.maxFrameRow = 2; // number or rows on spritesheet
+      this.sourceWidth = 124; // width of each sprite on spritesheet
+      this.sourceHeight = 124; // height of each sprite on spritesheet
       this.frame = 0;
       this.frameCol = this.frame % this.maxFrameCol;
       this.frameRow = Math.floor(this.frame / this.maxFrameCol);
