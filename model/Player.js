@@ -39,6 +39,48 @@ var Player = /** @class */ (function () {
         this.fps = 15;
         this.frameTimer = 0;
         this.hitboxRadius = this.width / 2.7;
+        this.images = {
+            alerted: {
+                L: null,
+                R: null,
+            },
+            attacking: {
+                L: null,
+                R: null,
+            },
+            running: {
+                L: null,
+                R: null,
+            },
+            still: {
+                L: null,
+                R: null,
+            },
+        };
+        this.images.alerted.L = new Image(60, 45);
+        this.images.alerted.L.src =
+            "assets/img/characters/goblin/goblin_alerted_L_spritesheet.png";
+        this.images.alerted.R = new Image(60, 45);
+        this.images.alerted.R.src =
+            "assets/img/characters/goblin/goblin_alerted_R_spritesheet.png";
+        this.images.attacking.L = new Image(60, 45);
+        this.images.attacking.L.src =
+            "assets/img/characters/goblin/goblin_attacking_L_spritesheet.png";
+        this.images.attacking.R = new Image(60, 45);
+        this.images.attacking.R.src =
+            "assets/img/characters/goblin/goblin_attacking_R_spritesheet.png";
+        this.images.running.L = new Image(60, 45);
+        this.images.running.L.src =
+            "assets/img/characters/goblin/goblin_running_L_spritesheet.png";
+        this.images.running.R = new Image(60, 45);
+        this.images.running.R.src =
+            "assets/img/characters/goblin/goblin_running_R_spritesheet.png";
+        this.images.still.L = new Image(60, 45);
+        this.images.still.L.src =
+            "assets/img/characters/goblin/goblin_still_L_spritesheet.png";
+        this.images.still.R = new Image(60, 45);
+        this.images.still.R.src =
+            "assets/img/characters/goblin/goblin_still_R_spritesheet.png";
     }
     Player.prototype.draw = function (context) {
         // see https://www.youtube.com/watch?v=7JtLHJbm0kA&t=830s
@@ -48,7 +90,7 @@ var Player = /** @class */ (function () {
             context.arc(this.x + this.width / 2.1, this.y + this.height / 1.8, this.hitboxRadius, 0, Math.PI * 2);
             context.stroke();
         }
-        context.drawImage(this.image, this.frameCol * this.sourceWidth, // sx
+        context.drawImage(this.images[this.animation][this.facing], this.frameCol * this.sourceWidth, // sx
         this.frameRow * this.sourceHeight, // sy
         this.width, // sw
         this.height, // sh
@@ -62,11 +104,11 @@ var Player = /** @class */ (function () {
         // ----- MOVEMENT
         // horizontal movement
         if (input.keys.includes("ArrowRight")) {
-            this.speedX = (this.speedXModifier * this.game.speed);
+            this.speedX = this.speedXModifier * this.game.speed;
             this.facing = "R";
         }
         else if (input.keys.includes("ArrowLeft")) {
-            this.speedX = (-this.speedXModifier * this.game.speed);
+            this.speedX = -this.speedXModifier * this.game.speed;
             this.facing = "L";
         }
         else {
@@ -78,11 +120,11 @@ var Player = /** @class */ (function () {
         // horizontal boundaries
         if (this.x < this.leftLimit) {
             this.x = 0;
-            this.game.background.speedX = (-this.speedX * this.game.speed);
+            this.game.background.speedX = -this.speedX * this.game.speed;
         }
         else if (this.x > this.rightLimit) {
             this.x = this.game.width - this.width;
-            this.game.background.speedX = (-this.speedX * this.game.speed);
+            this.game.background.speedX = -this.speedX * this.game.speed;
         }
         else {
             this.game.background.speedX = 0;
@@ -118,12 +160,6 @@ var Player = /** @class */ (function () {
         }
         else {
             this.frameTimer += deltaTime;
-        }
-    };
-    Player.prototype.changeSpritesheet = function () {
-        if (this.image) {
-            // this.image.src = `assets/img/characters/goblin/goblin_${this.animation}_${this.facing}_spritesheet.png`;
-            this.image = document.getElementById("imgGoblin-".concat(this.animation, "-").concat(this.facing));
         }
     };
     Player.prototype.setState = function (state) {

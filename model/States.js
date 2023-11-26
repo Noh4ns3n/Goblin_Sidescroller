@@ -33,7 +33,6 @@ var Still = /** @class */ (function (_super) {
     }
     Still.prototype.enter = function () {
         this.player.animation = "still";
-        this.player.changeSpritesheet();
     };
     Still.prototype.handleInput = function (input) {
         if (input.keys.includes("ArrowRight")) {
@@ -46,7 +45,6 @@ var Still = /** @class */ (function (_super) {
         }
         if (input.keys.includes("ArrowUp"))
             this.player.setState(const_1.STATES.JUMPING);
-        this.player.changeSpritesheet();
     };
     return Still;
 }(State));
@@ -60,16 +58,13 @@ var Running = /** @class */ (function (_super) {
     }
     Running.prototype.enter = function () {
         this.player.animation = "running";
-        this.player.changeSpritesheet();
     };
     Running.prototype.handleInput = function (input) {
         if (input.keys.includes("ArrowRight")) {
             this.player.facing = "R";
-            this.player.changeSpritesheet();
         }
         else if (input.keys.includes("ArrowLeft")) {
             this.player.facing = "L";
-            this.player.changeSpritesheet();
         }
         if (input.keys.includes("ArrowUp"))
             this.player.setState(const_1.STATES.JUMPING);
@@ -88,7 +83,6 @@ var Jumping = /** @class */ (function (_super) {
     }
     Jumping.prototype.enter = function () {
         this.player.animation = "running";
-        this.player.changeSpritesheet();
     };
     Jumping.prototype.handleInput = function (input) {
         if (this.player.speedY > this.player.weight) {
@@ -107,7 +101,6 @@ var Falling = /** @class */ (function (_super) {
     }
     Falling.prototype.enter = function () {
         this.player.animation = "running";
-        this.player.changeSpritesheet();
     };
     Falling.prototype.handleInput = function (input) {
         if (this.player.onGround()) {

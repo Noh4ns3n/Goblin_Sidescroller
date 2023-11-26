@@ -17,7 +17,6 @@ class Still extends State {
     }
     enter() {
       this.player.animation = "still";
-      this.player.changeSpritesheet();
     }
     handleInput(input) {
       if (input.keys.includes("ArrowRight")) {
@@ -28,7 +27,6 @@ class Still extends State {
         this.player.setState(STATES.RUNNING);
       }
       if (input.keys.includes("ArrowUp")) this.player.setState(STATES.JUMPING);
-      this.player.changeSpritesheet();
     }
   }
 class Running extends State {
@@ -40,15 +38,12 @@ class Running extends State {
     }
     enter() {
       this.player.animation = "running";
-      this.player.changeSpritesheet();
     }
     handleInput(input) {
       if (input.keys.includes("ArrowRight")) {
         this.player.facing = "R";
-        this.player.changeSpritesheet();
       } else if (input.keys.includes("ArrowLeft")) {
         this.player.facing = "L";
-        this.player.changeSpritesheet();
       }
       if (input.keys.includes("ArrowUp")) this.player.setState(STATES.JUMPING);
       if (this.player.speedX === 0) this.player.setState(STATES.STILL);
@@ -64,7 +59,6 @@ class Jumping extends State {
     }
     enter() {
       this.player.animation = "running";
-      this.player.changeSpritesheet();
     }
     handleInput(input) {
       if (this.player.speedY > this.player.weight) {
@@ -81,7 +75,6 @@ class Falling extends State {
     }
     enter() {
       this.player.animation = "running";
-      this.player.changeSpritesheet();
     }
     handleInput(input) {
       if (this.player.onGround()) {
