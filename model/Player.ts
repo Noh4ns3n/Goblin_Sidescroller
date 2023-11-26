@@ -259,6 +259,8 @@ export class Player {
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < enemy.hitboxRadius + this.hitboxRadius) {
         this.healthpoints--;
+        enemy.animation = "turning";
+        enemy.speedX = -enemy.speedX;
         this.speedY = -(this.speedY + 3);
       }
     });

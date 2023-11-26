@@ -11,12 +11,11 @@ body {
 }
 
 #containerHearts {
+    position:relative;
     display:flex;
     justify-content: space-between;
-    position:absolute;
-    top:85%;
-    left:50%;
-  width:6.5%;
+    left:43.5%;
+    width:6.5%;
     transform:translate(-50%,-50%);
     z-index: 2;
 }
@@ -26,6 +25,12 @@ body {
     border: 5px solid white;
 }
 
+#pScore {
+    position:relative;
+    text-align:center;  
+    font-family: silkscreen;
+    font-size: 40px;
+}
 
 #pVictory2 {
    
@@ -52,10 +57,4 @@ body {
     z-index:1;
 }
 
-#pScore {
-    position:relative;
-    text-align:center;  
-    font-family: silkscreen;
-    font-size: 40px;
-}
 

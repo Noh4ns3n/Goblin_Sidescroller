@@ -145,11 +145,11 @@ export class Enemy {
 
   draw(context: CanvasRenderingContext2D) {
     if (this.game.debug) {
-      // context.strokeRect(this.x, this.y, this.width, this.height);
+     
       context.beginPath();
       context.arc(
-        this.x + this.width / 2,
-        this.y + this.height / 2,
+        this.x + this.width / this.hitboxXOffset,
+        this.y + this.height / this.hitboxYOffset,
         this.hitboxRadius,
         0,
         Math.PI * 2
