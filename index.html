@@ -1,46 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+
     <title>RPG Vincent</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
-</head>
-<body>
-<div id="container">
-    
-    <canvas id="canvas1"></canvas>
-    <p>Score : 
-        <span id="spanScore" value="0">
-            
-        </span>
-    </p>
-</div>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap"
+      rel="stylesheet"
+    />
 
-    <img id="imgGoblin"src="assets/img/characters/goblin/goblin_still_R_spritesheet.png">
-    
-    <img id="imgBoar"src="assets/img/characters/boar/boar_running_L_spritesheet.png">
-
-    <img class="imgBackground" id="imgPlx1" src="assets/img/background/plx-1.png">
-    <img class="imgBackground" id="imgPlx2" src="assets/img/background/plx-2.png">
-    <img class="imgBackground" id="imgPlx3" src="assets/img/background/plx-3.png">
-    <img class="imgBackground" id="imgPlx4" src="assets/img/background/plx-4.png">
-    <img class="imgBackground" id="imgPlx5" src="assets/img/background/plx-5.png">
-    <img class="imgBackground" id="imgGround" src="assets/img/background/ground.png">
-
-    <script src="InputHandler.js"></script>
+    <!-- <script src="InputHandler.js"></script>
     <script src="Layer.js"></script>
     <script src="Background.js"></script>
     <script src="States.js"></script>
     <script src="Player.js"></script>
     <script src="Enemy.js"></script>
-    <script src="Game.js"></script>
+    <script src="Game.js"></script> -->
 
-    <script src="script.js"></script>
-    
-</body>
+    <script src="./dist/bundle.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <canvas id="canvas1"></canvas>
+      <p>
+        Score :
+        <span id="spanScore" value="0"> </span>
+      </p>
+    </div>
+
+    <img
+      id="imgGoblin"
+      src="assets/img/characters/goblin/goblin_still_R_spritesheet.png"
+    />
+
+    <img
+      id="imgBoar"
+      src="assets/img/characters/boar/boar_running_L_spritesheet.png"
+    />
+
+    <img
+      class="imgBackground"
+      id="imgPlx1"
+      src="assets/img/background/plx-1.png"
+    />
+    <img
+      class="imgBackground"
+      id="imgPlx2"
+      src="assets/img/background/plx-2.png"
+    />
+    <img
+      class="imgBackground"
+      id="imgPlx3"
+      src="assets/img/background/plx-3.png"
+    />
+    <img
+      class="imgBackground"
+      id="imgPlx4"
+      src="assets/img/background/plx-4.png"
+    />
+    <img
+      class="imgBackground"
+      id="imgPlx5"
+      src="assets/img/background/plx-5.png"
+    />
+    <img
+      class="imgBackground"
+      id="imgGround"
+      src="assets/img/background/ground.png"
+    />
+  </body>
 </html>

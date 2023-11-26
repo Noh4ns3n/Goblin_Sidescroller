@@ -1,5 +1,7 @@
+import { Game } from "./Game";
+
 export   class Enemy {
-  image: HTMLElement | null;
+  image: HTMLImageElement | null;
   gameWidth: any;
   gameHeight: any;
   width: number;
@@ -21,9 +23,9 @@ export   class Enemy {
   hitboxRadius : number;
   markedForDeletion : boolean;
 
-  constructor(game) {
+  constructor(game: Game) {
     this.game = game;
-    this.image = document.getElementById("imgBoar");
+    this.image = document.getElementById("imgBoar") as HTMLImageElement;
     this.width = 60; // displayed width
     this.height = 60; // displayed height
     this.x = this.game.width;
@@ -43,7 +45,7 @@ export   class Enemy {
     this.markedForDeletion = false;
   }
 
-  draw(context) {
+  draw(context: CanvasRenderingContext2D) {
     if (this.game.debug) {
       // context.strokeRect(this.x, this.y, this.width, this.height);
       context.beginPath();
@@ -76,7 +78,7 @@ export   class Enemy {
     }
   }
 
-  update(deltaTime) {
+  update(deltaTime: number) {
     // animation
     // update enemy frame only when above fps interval
     if (this.frameTimer > 1000 / this.fps) {
