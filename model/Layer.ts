@@ -1,6 +1,6 @@
 import { Background } from "./Background";
 
-export class Layer {
+export   class Layer {
   background: Background;
   width: number;
   height: number;

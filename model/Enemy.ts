@@ -1,4 +1,4 @@
-export class Enemy {
+export   class Enemy {
   image: HTMLElement | null;
   gameWidth: any;
   gameHeight: any;
@@ -17,16 +17,18 @@ export class Enemy {
   frameRow: number;
   fps: number;
   frameTimer: number;
+  game: Game;
+  hitboxRadius : number;
+  markedForDeletion : boolean;
 
-  constructor(gameWidth, gameHeight) {
+  constructor(game) {
+    this.game = game;
     this.image = document.getElementById("imgBoar");
-    this.gameWidth = gameWidth;
-    this.gameHeight = gameHeight;
     this.width = 60; // displayed width
     this.height = 60; // displayed height
-    this.x = this.gameWidth;
+    this.x = this.game.width;
     this.yOffset = 8; // account for character offset on sprite
-    this.y = this.gameHeight - this.height + this.yOffset;
+    this.y = this.game.height - this.height + this.yOffset;
     this.speedX = 2;
     this.maxFrameCol = 4; // number of columns on spritesheet
     this.maxFrameRow = 2; // number or rows on spritesheet
@@ -37,9 +39,23 @@ export class Enemy {
     this.frameRow = Math.floor(this.frame / this.maxFrameCol);
     this.fps = 15;
     this.frameTimer = 0;
+    this.hitboxRadius = this.width / 2.35;
+    this.markedForDeletion = false;
   }
 
   draw(context) {
+    if (this.game.debug) {
+      // context.strokeRect(this.x, this.y, this.width, this.height);
+      context.beginPath();
+      context.arc(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        this.hitboxRadius,
+        0,
+        Math.PI * 2
+      );
+      context.stroke();
+    }
     context.drawImage(
       this.image,
       this.frameCol * this.sourceWidth, //sx
@@ -51,6 +67,13 @@ export class Enemy {
       this.width,
       this.height
     );
+  }
+
+  checkForDeletion() {
+    if (this.x < 0 - this.width) {
+      this.markedForDeletion = true;
+      this.game.score++;
+    }
   }
 
   update(deltaTime) {
@@ -72,6 +95,7 @@ export class Enemy {
     }
 
     // horizontal movement
-    this.x -= this.speedX;
+    this.x -= (this.speedX * this.game.speed);
+    this.checkForDeletion();
   }
 }

@@ -26,8 +26,9 @@ window.addEventListener("load", function () {
         FALLING: 3,
     };
     var InputHandler = /** @class */ (function () {
-        function InputHandler() {
+        function InputHandler(game) {
             var _this = this;
+            this.game = game;
             this.keys = [];
             window.addEventListener("keydown", function (e) {
                 if ((e.key === "ArrowDown" ||
@@ -36,6 +37,9 @@ window.addEventListener("load", function () {
                     e.key === "ArrowRight") &&
                     !_this.keys.includes(e.key)) {
                     _this.keys.push(e.key);
+                }
+                else if (e.key === "d") {
+                    _this.game.debug = !_this.game.debug;
                 }
             });
             window.addEventListener("keyup", function (e) {
@@ -58,7 +62,7 @@ window.addEventListener("load", function () {
     var Still = /** @class */ (function (_super) {
         __extends(Still, _super);
         function Still(player) {
-            var _this = _super.call(this, 'STILL') || this;
+            var _this = _super.call(this, "STILL") || this;
             _this.player = player;
             return _this;
         }
@@ -75,7 +79,7 @@ window.addEventListener("load", function () {
                 this.player.facing = "L";
                 this.player.setState(STATES.RUNNING);
             }
-            if (input.keys.includes('ArrowUp'))
+            if (input.keys.includes("ArrowUp"))
                 this.player.setState(STATES.JUMPING);
             this.player.changeSpritesheet();
         };
@@ -84,7 +88,7 @@ window.addEventListener("load", function () {
     var Running = /** @class */ (function (_super) {
         __extends(Running, _super);
         function Running(player) {
-            var _this = _super.call(this, 'RUNNING') || this;
+            var _this = _super.call(this, "RUNNING") || this;
             _this.player = player;
             return _this;
         }
@@ -111,7 +115,7 @@ window.addEventListener("load", function () {
     var Jumping = /** @class */ (function (_super) {
         __extends(Jumping, _super);
         function Jumping(player) {
-            var _this = _super.call(this, 'JUMPING') || this;
+            var _this = _super.call(this, "JUMPING") || this;
             _this.player = player;
             return _this;
         }
@@ -129,7 +133,7 @@ window.addEventListener("load", function () {
     var Falling = /** @class */ (function (_super) {
         __extends(Falling, _super);
         function Falling(player) {
-            var _this = _super.call(this, 'FALLING') || this;
+            var _this = _super.call(this, "FALLING") || this;
             _this.player = player;
             return _this;
         }
@@ -147,7 +151,12 @@ window.addEventListener("load", function () {
     var Player = /** @class */ (function () {
         function Player(game) {
             this.game = game;
-            this.states = [new Still(this), new Running(this), new Jumping(this), new Falling(this)];
+            this.states = [
+                new Still(this),
+                new Running(this),
+                new Jumping(this),
+                new Falling(this),
+            ];
             this.currentState = this.states[0];
             this.currentState.enter();
             this.image = document.getElementById("imgGoblin");
@@ -175,9 +184,16 @@ window.addEventListener("load", function () {
             this.frameRow = Math.floor(this.frame / this.maxFrameCol);
             this.fps = 15;
             this.frameTimer = 0;
+            this.hitboxRadius = this.width / 2.7;
         }
         Player.prototype.draw = function (context) {
             // see https://www.youtube.com/watch?v=7JtLHJbm0kA&t=830s
+            if (this.game.debug) {
+                // context.strokeRect(this.x, this.y, this.width, this.height);
+                context.beginPath();
+                context.arc(this.x + this.width / 2.1, this.y + this.height / 1.8, this.hitboxRadius, 0, Math.PI * 2);
+                context.stroke();
+            }
             context.drawImage(this.image, this.frameCol * this.sourceWidth, // sx
             this.frameRow * this.sourceHeight, // sy
             this.width, // sw
@@ -185,14 +201,18 @@ window.addEventListener("load", function () {
             this.x, this.y, this.width, this.height);
         };
         Player.prototype.update = function (input, deltaTime) {
+            this.checkCollision();
+            if (this.game.debug) {
+                console.log("this.currentState :>> ", this.currentState);
+            }
             // ----- MOVEMENT
             // horizontal movement
             if (input.keys.includes("ArrowRight")) {
-                this.speedX = this.speedXModifier;
+                this.speedX = (this.speedXModifier * this.game.speed);
                 this.facing = "R";
             }
             else if (input.keys.includes("ArrowLeft")) {
-                this.speedX = -this.speedXModifier;
+                this.speedX = (-this.speedXModifier * this.game.speed);
                 this.facing = "L";
             }
             else {
@@ -204,11 +224,11 @@ window.addEventListener("load", function () {
             // horizontal boundaries
             if (this.x < this.leftLimit) {
                 this.x = 0;
-                this.game.background.speedX = -this.speedX;
+                this.game.background.speedX = (-this.speedX * this.game.speed);
             }
             else if (this.x > this.rightLimit) {
                 this.x = this.game.width - this.width;
-                this.game.background.speedX = -this.speedX;
+                this.game.background.speedX = (-this.speedX * this.game.speed);
             }
             else {
                 this.game.background.speedX = 0;
@@ -230,7 +250,6 @@ window.addEventListener("load", function () {
             // ----- ANIMATION
             // update player frame only when above fps interval
             if (this.frameTimer > 1000 / this.fps) {
-                console.log('this.currentState :>> ', this.currentState);
                 this.frameTimer = 0;
                 // if reached end of spritesheet, repositions to start of spritesheet
                 if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
@@ -255,6 +274,17 @@ window.addEventListener("load", function () {
         Player.prototype.setState = function (state) {
             this.currentState = this.states[state];
             this.currentState.enter();
+        };
+        Player.prototype.checkCollision = function () {
+            var _this = this;
+            this.game.enemies.forEach(function (enemy) {
+                var dx = enemy.x - _this.x;
+                var dy = enemy.y - _this.y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < enemy.hitboxRadius + _this.hitboxRadius) {
+                    _this.game.gameOver = true;
+                }
+            });
         };
         Player.prototype.onGround = function () {
             return this.y >= this.game.height - this.height;
@@ -342,13 +372,27 @@ window.addEventListener("load", function () {
             this.frameRow = Math.floor(this.frame / this.maxFrameCol);
             this.fps = 15;
             this.frameTimer = 0;
+            this.hitboxRadius = this.width / 2.35;
+            this.markedForDeletion = false;
         }
         Enemy.prototype.draw = function (context) {
+            if (this.game.debug) {
+                // context.strokeRect(this.x, this.y, this.width, this.height);
+                context.beginPath();
+                context.arc(this.x + this.width / 2, this.y + this.height / 2, this.hitboxRadius, 0, Math.PI * 2);
+                context.stroke();
+            }
             context.drawImage(this.image, this.frameCol * this.sourceWidth, //sx
             this.frameRow * this.sourceHeight, //sy
             this.sourceWidth, //sw
             this.sourceHeight, //sh
             this.x, this.y, this.width, this.height);
+        };
+        Enemy.prototype.checkForDeletion = function () {
+            if (this.x < 0 - this.width) {
+                this.markedForDeletion = true;
+                this.game.score++;
+            }
         };
         Enemy.prototype.update = function (deltaTime) {
             // animation
@@ -370,7 +414,8 @@ window.addEventListener("load", function () {
                 this.frameTimer += deltaTime;
             }
             // horizontal movement
-            this.x -= this.speedX;
+            this.x -= (this.speedX * this.game.speed);
+            this.checkForDeletion();
         };
         return Enemy;
     }());
@@ -386,7 +431,9 @@ window.addEventListener("load", function () {
                 _this.player.draw(_this.context);
                 _this.player.update(_this.input, deltaTime);
                 _this.handleEnemies(deltaTime);
-                requestAnimationFrame(_this.animate);
+                _this.displayStatusText();
+                if (!_this.gameOver)
+                    requestAnimationFrame(_this.animate);
             };
             this.context = context;
             this.height = CANVAS_HEIGHT;
@@ -396,13 +443,17 @@ window.addEventListener("load", function () {
             this.randomEnemyInterval = Math.random() * 1000 + 500;
             this.enemyTimer = 0;
             this.enemies = [];
-            this.input = new InputHandler();
+            this.input = new InputHandler(this);
             this.background = new Background();
             this.player = new Player(this);
+            this.debug = false;
+            this.score = 0;
+            this.speed = 1;
+            this.gameOver = false;
+            this.spanScore = document.getElementById('spanScore');
         }
         Game.prototype.handleEnemies = function (deltaTime) {
             var _this = this;
-            var _a;
             if (this.enemyTimer > this.enemyInterval + this.randomEnemyInterval) {
                 this.enemies.push(new Enemy(this));
                 this.randomEnemyInterval = Math.random() * 1000;
@@ -411,12 +462,15 @@ window.addEventListener("load", function () {
             else {
                 this.enemyTimer += deltaTime;
             }
-            (_a = this.enemies) === null || _a === void 0 ? void 0 : _a.forEach(function (enemy) {
-                enemy === null || enemy === void 0 ? void 0 : enemy.draw(_this.context);
-                enemy === null || enemy === void 0 ? void 0 : enemy.update(deltaTime);
+            this.enemies.forEach(function (enemy) {
+                enemy.draw(_this.context);
+                enemy.update(deltaTime);
+                _this.enemies = _this.enemies.filter(function (enemy) { return !enemy.markedForDeletion; });
             });
         };
-        Game.prototype.displayStatusText = function () { };
+        Game.prototype.displayStatusText = function () {
+            this.spanScore.innerHTML = this.score.toString();
+        };
         return Game;
     }());
     var game = new Game(ctx);

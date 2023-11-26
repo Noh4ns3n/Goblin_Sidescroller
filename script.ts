@@ -11,11 +11,14 @@ window.addEventListener("load", function () {
     JUMPING: 2,
     FALLING: 3,
   };
-
+ 
   
+
   class InputHandler {
     keys: any[];
-    constructor() {
+    game: Game;
+    constructor(game) {
+      this.game = game;
       this.keys = [];
 
       window.addEventListener("keydown", (e) => {
@@ -27,6 +30,8 @@ window.addEventListener("load", function () {
           !this.keys.includes(e.key)
         ) {
           this.keys.push(e.key);
+        } else if (e.key === "d") {
+          this.game.debug = !this.game.debug;
         }
       });
 
@@ -49,70 +54,67 @@ window.addEventListener("load", function () {
       this.state = state;
     }
   }
-  
+
   class Still extends State {
     player: Player;
 
     constructor(player) {
-      super('STILL');
+      super("STILL");
       this.player = player;
     }
     enter() {
-      this.player.animation="still";
+      this.player.animation = "still";
       this.player.changeSpritesheet();
     }
-    handleInput(input){
+    handleInput(input) {
       if (input.keys.includes("ArrowRight")) {
-        this.player.facing="R";
+        this.player.facing = "R";
         this.player.setState(STATES.RUNNING);
-      } 
-      else if (input.keys.includes("ArrowLeft")) {
-        this.player.facing="L";
+      } else if (input.keys.includes("ArrowLeft")) {
+        this.player.facing = "L";
         this.player.setState(STATES.RUNNING);
       }
-    if(input.keys.includes('ArrowUp')) this.player.setState(STATES.JUMPING);
-    this.player.changeSpritesheet();
-
+      if (input.keys.includes("ArrowUp")) this.player.setState(STATES.JUMPING);
+      this.player.changeSpritesheet();
+    }
   }
-}
   class Running extends State {
     player: Player;
 
     constructor(player) {
-      super('RUNNING');
+      super("RUNNING");
       this.player = player;
     }
     enter() {
-      this.player.animation="running";
+      this.player.animation = "running";
       this.player.changeSpritesheet();
     }
-    handleInput(input){
+    handleInput(input) {
       if (input.keys.includes("ArrowRight")) {
-        this.player.facing="R";
+        this.player.facing = "R";
         this.player.changeSpritesheet();
-      } 
-      else if (input.keys.includes("ArrowLeft")) {
-        this.player.facing="L";
+      } else if (input.keys.includes("ArrowLeft")) {
+        this.player.facing = "L";
         this.player.changeSpritesheet();
       }
       if (input.keys.includes("ArrowUp")) this.player.setState(STATES.JUMPING);
       if (this.player.speedX === 0) this.player.setState(STATES.STILL);
+    }
   }
-}
 
   class Jumping extends State {
     player: Player;
 
     constructor(player) {
-      super('JUMPING');
+      super("JUMPING");
       this.player = player;
     }
     enter() {
-      this.player.animation="running";
+      this.player.animation = "running";
       this.player.changeSpritesheet();
     }
-    handleInput(input){
-      if(this.player.speedY > this.player.weight) {
+    handleInput(input) {
+      if (this.player.speedY > this.player.weight) {
         this.player.setState(STATES.FALLING);
       }
     }
@@ -121,15 +123,15 @@ window.addEventListener("load", function () {
     player: Player;
 
     constructor(player) {
-      super('FALLING');
+      super("FALLING");
       this.player = player;
     }
     enter() {
-      this.player.animation="running";
+      this.player.animation = "running";
       this.player.changeSpritesheet();
     }
-    handleInput(input){
-      if(this.player.onGround()) {
+    handleInput(input) {
+      if (this.player.onGround()) {
         this.player.setState(STATES.STILL);
       }
     }
@@ -163,11 +165,17 @@ window.addEventListener("load", function () {
     background: Background;
     game: Game;
     states: State[];
-    currentState : any;
+    currentState: any;
+    hitboxRadius : number;
 
     constructor(game) {
       this.game = game;
-      this.states = [new Still(this), new Running(this), new Jumping(this), new Falling(this)];
+      this.states = [
+        new Still(this),
+        new Running(this),
+        new Jumping(this),
+        new Falling(this),
+      ];
       this.currentState = this.states[0];
       this.currentState.enter();
       this.image = document.getElementById("imgGoblin") as HTMLImageElement;
@@ -195,11 +203,23 @@ window.addEventListener("load", function () {
       this.frameRow = Math.floor(this.frame / this.maxFrameCol);
       this.fps = 15;
       this.frameTimer = 0;
-
+      this.hitboxRadius = this.width / 2.7;
     }
 
     draw(context) {
       // see https://www.youtube.com/watch?v=7JtLHJbm0kA&t=830s
+      if (this.game.debug) {
+        // context.strokeRect(this.x, this.y, this.width, this.height);
+        context.beginPath();
+        context.arc(
+          this.x + this.width / 2.1,
+          this.y + this.height / 1.8,
+          this.hitboxRadius,
+          0,
+          Math.PI * 2
+        );
+        context.stroke();
+      }
       context.drawImage(
         this.image,
         this.frameCol * this.sourceWidth, // sx
@@ -214,13 +234,17 @@ window.addEventListener("load", function () {
     }
 
     update(input, deltaTime) {
+      this.checkCollision();
+      if (this.game.debug) {
+        console.log("this.currentState :>> ", this.currentState);
+      }
       // ----- MOVEMENT
       // horizontal movement
       if (input.keys.includes("ArrowRight")) {
-        this.speedX = this.speedXModifier;
+        this.speedX = (this.speedXModifier * this.game.speed);
         this.facing = "R";
       } else if (input.keys.includes("ArrowLeft")) {
-        this.speedX = -this.speedXModifier;
+        this.speedX = (-this.speedXModifier * this.game.speed);
         this.facing = "L";
       } else {
         this.speedX = 0;
@@ -228,23 +252,23 @@ window.addEventListener("load", function () {
       this.x += this.speedX;
       this.traveledX += this.speedX;
       this.currentState.handleInput(input);
-      
+
       // horizontal boundaries
       if (this.x < this.leftLimit) {
         this.x = 0;
-        this.game.background.speedX = -this.speedX;
+        this.game.background.speedX = (-this.speedX * this.game.speed);
       } else if (this.x > this.rightLimit) {
         this.x = this.game.width - this.width;
-        this.game.background.speedX = -this.speedX;
+        this.game.background.speedX = (-this.speedX * this.game.speed);
       } else {
         this.game.background.speedX = 0;
       }
       // vertical movement
       if (input.keys.includes("ArrowUp") && this.onGround()) {
-        this.speedY -= 20
+        this.speedY -= 20;
       }
       this.y += this.speedY;
-      
+
       if (!this.onGround()) {
         this.speedY += this.weight;
       } else {
@@ -256,8 +280,6 @@ window.addEventListener("load", function () {
       // ----- ANIMATION
       // update player frame only when above fps interval
       if (this.frameTimer > 1000 / this.fps) {
-      console.log('this.currentState :>> ', this.currentState);
-
         this.frameTimer = 0;
         // if reached end of spritesheet, repositions to start of spritesheet
         if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
@@ -282,6 +304,17 @@ window.addEventListener("load", function () {
     setState(state) {
       this.currentState = this.states[state];
       this.currentState.enter();
+    }
+
+    checkCollision() {
+      this.game.enemies.forEach((enemy) => {
+        const dx = enemy.x - this.x;
+        const dy = enemy.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if(distance < enemy.hitboxRadius + this.hitboxRadius) {
+          this.game.gameOver = true;
+        }
+      });
     }
 
     onGround() {
@@ -386,6 +419,8 @@ window.addEventListener("load", function () {
     fps: number;
     frameTimer: number;
     game: Game;
+    hitboxRadius : number;
+    markedForDeletion : boolean;
 
     constructor(game) {
       this.game = game;
@@ -405,9 +440,23 @@ window.addEventListener("load", function () {
       this.frameRow = Math.floor(this.frame / this.maxFrameCol);
       this.fps = 15;
       this.frameTimer = 0;
+      this.hitboxRadius = this.width / 2.35;
+      this.markedForDeletion = false;
     }
 
     draw(context) {
+      if (this.game.debug) {
+        // context.strokeRect(this.x, this.y, this.width, this.height);
+        context.beginPath();
+        context.arc(
+          this.x + this.width / 2,
+          this.y + this.height / 2,
+          this.hitboxRadius,
+          0,
+          Math.PI * 2
+        );
+        context.stroke();
+      }
       context.drawImage(
         this.image,
         this.frameCol * this.sourceWidth, //sx
@@ -419,6 +468,13 @@ window.addEventListener("load", function () {
         this.width,
         this.height
       );
+    }
+
+    checkForDeletion() {
+      if (this.x < 0 - this.width) {
+        this.markedForDeletion = true;
+        this.game.score++;
+      }
     }
 
     update(deltaTime) {
@@ -440,7 +496,8 @@ window.addEventListener("load", function () {
       }
 
       // horizontal movement
-      this.x -= this.speedX;
+      this.x -= (this.speedX * this.game.speed);
+      this.checkForDeletion();
     }
   }
 
@@ -456,6 +513,11 @@ window.addEventListener("load", function () {
     enemyTimer: number;
     enemies: Enemy[];
     context: any;
+    debug: boolean;
+    score:number;
+    speed:number;
+    gameOver:boolean;
+    spanScore : HTMLSpanElement;
 
     constructor(context) {
       this.context = context;
@@ -466,9 +528,14 @@ window.addEventListener("load", function () {
       this.randomEnemyInterval = Math.random() * 1000 + 500;
       this.enemyTimer = 0;
       this.enemies = [];
-      this.input = new InputHandler();
+      this.input = new InputHandler(this);
       this.background = new Background();
       this.player = new Player(this);
+      this.debug = false;
+      this.score = 0;
+      this.speed = 1;
+      this.gameOver = false;
+      this.spanScore = document.getElementById('spanScore');
     }
 
     handleEnemies(deltaTime) {
@@ -479,10 +546,12 @@ window.addEventListener("load", function () {
       } else {
         this.enemyTimer += deltaTime;
       }
-      this.enemies?.forEach((enemy) => {
-        enemy?.draw(this.context);
-        enemy?.update(deltaTime);
+      this.enemies.forEach((enemy) => {
+        enemy.draw(this.context);
+        enemy.update(deltaTime);
+        this.enemies = this.enemies.filter(enemy => !enemy.markedForDeletion);
       });
+      
     }
 
     animate = (timeStamp) => {
@@ -496,14 +565,14 @@ window.addEventListener("load", function () {
       this.player.update(this.input, deltaTime);
 
       this.handleEnemies(deltaTime);
-
-      requestAnimationFrame(this.animate);
+      this.displayStatusText();
+      if(!this.gameOver) requestAnimationFrame(this.animate);
     };
 
-    displayStatusText() {}
+    displayStatusText() {
+      this.spanScore.innerHTML = this.score.toString();
+    }
   }
-
- 
 
   const game = new Game(ctx);
   game.animate(0);
