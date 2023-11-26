@@ -23,7 +23,7 @@ export class Background {
 
       this.imageLayer1 = new Image(60,40);
       this.imageLayer1.src = "assets/img/background/plx-1.png";
-      const layer1 = new Layer(this, this.imageLayer1, 0.2);
+      const layer1 = new Layer(this, this.imageLayer1, 0.0);
       this.imageLayer2 = new Image(60,40);
       this.imageLayer2.src = "assets/img/background/plx-2.png";
       const layer2 = new Layer(this, this.imageLayer2, 0.4);

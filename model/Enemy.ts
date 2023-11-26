@@ -36,6 +36,8 @@ export class Enemy {
   frameTimer: number;
   game: Game;
   hitboxRadius: number;
+  hitboxXOffset: number;
+  hitboxYOffset: number;
   markedForDeletion: boolean;
   animation: Animations;
   facing: Facings;
@@ -60,6 +62,8 @@ export class Enemy {
     this.fps = 15;
     this.frameTimer = 0;
     this.hitboxRadius = this.width / 2.35;
+    this.hitboxXOffset = 2;
+    this.hitboxYOffset = 2;
     this.markedForDeletion = false;
     this.animation = "running";
     this.facing = "L";
@@ -165,6 +169,16 @@ export class Enemy {
     );
   }
 
+  checkForCoward() {
+    if(this.game.player.x === this.game.player.leftLimit) {
+      this.fps = 22;
+    }
+    else {
+      this.fps = 13;
+    }
+
+  }
+
   checkForDeletion() {
     if (this.x < 0 - this.width) {
       this.markedForDeletion = true;
@@ -193,5 +207,6 @@ export class Enemy {
     // horizontal movement
     this.x -= this.speedX * this.game.speed;
     this.checkForDeletion();
+    this.checkForCoward();
   }
 }

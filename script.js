@@ -204,6 +204,8 @@ window.addEventListener("load", function () {
             this.checkCollision();
             if (this.game.debug) {
                 console.log("this.currentState :>> ", this.currentState);
+                console.log('this.speedX :>> ', this.speedX);
+            console.log('this.speedY :>> ', this.speedY);
             }
             // ----- MOVEMENT
             // horizontal movement
