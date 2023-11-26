@@ -1,5 +1,6 @@
 body {
     background: black;
+    color: white;
 }
 
 #container {
@@ -18,11 +19,23 @@ img {
     display:none;
 }
 
-p {
-    position:relative;
+#pVictory {
+    position: absolute;
+    width:120%;
+    top:-20%;
+    left:50%;
+    transform:translate(-50%,-50%);
     text-align:center;
-    
-    color: white;
+    font-family: silkscreen;
+    font-size: 40px;
+    z-index:1;
+}
+
+#pScore {
+    position:relative;
+    text-align:center;  
+
     font-family: silkscreen;
     font-size: 40px;
 }
+

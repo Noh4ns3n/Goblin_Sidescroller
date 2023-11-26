@@ -5,7 +5,7 @@ import { InputHandler } from "./InputHandler";
 import { Player } from "./Player";
 // import "../scripts/require.js";
 
-export   class Game {
+export class Game {
   input: InputHandler;
   background: Background;
   player: Player;
@@ -18,10 +18,13 @@ export   class Game {
   enemies: Enemy[];
   context: any;
   debug: boolean;
-  score:number;
-  speed:number;
-  gameOver:boolean;
-  spanScore : HTMLSpanElement;
+  score: number;
+  speed: number;
+  gameOver: boolean;
+  victory: boolean;
+  spanScore: HTMLSpanElement;
+  spanVictory: HTMLSpanElement;
+  body: HTMLElement;
 
   constructor(context) {
     this.context = context;
@@ -39,7 +42,11 @@ export   class Game {
     this.score = 0;
     this.speed = 1;
     this.gameOver = false;
-    this.spanScore = document.getElementById('spanScore');
+    this.victory = false;
+    this.spanScore = document.getElementById("spanScore");
+    this.spanVictory = document.getElementById("spanVictory");
+    this.body = document.body;
+
   }
 
   handleEnemies(deltaTime) {
@@ -53,10 +60,34 @@ export   class Game {
     this.enemies.forEach((enemy) => {
       enemy.draw(this.context);
       enemy.update(deltaTime);
-      this.enemies = this.enemies.filter(enemy => !enemy.markedForDeletion);
+      this.enemies = this.enemies.filter((enemy) => !enemy.markedForDeletion);
     });
-    
   }
+
+  handleVictory() {
+    if (this.score >= 20) {
+      this.body.style.color = "green";
+      const message = "Bravo ! A bientôt pour ton anniversaire !";
+      this.spanVictory.innerHTML = message;
+    }
+    else {
+      this.body.style.color = "darkred";
+      const message = "Perdu ! Essaye encore !";
+      this.spanVictory.innerHTML = message;
+    }
+  }
+
+  grayscaleCanvas() {
+    const imageData = this.context.getImageData(0, 0, this.width, this.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        const luminance = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+        data[i] = luminance;
+        data[i + 1] = luminance;
+        data[i + 2] = luminance;
+    }
+    this.context.putImageData(imageData, 0, 0);
+}
 
   animate = (timeStamp) => {
     const deltaTime = timeStamp - this.lastTime;
@@ -67,10 +98,13 @@ export   class Game {
     this.background.update();
     this.player.draw(this.context);
     this.player.update(this.input, deltaTime);
-
+    
     this.handleEnemies(deltaTime);
     this.displayStatusText();
-    if(!this.gameOver) requestAnimationFrame(this.animate);
+    if (this.gameOver) {
+      this.grayscaleCanvas()
+      this.handleVictory();
+    } else requestAnimationFrame(this.animate);
   };
 
   displayStatusText() {
