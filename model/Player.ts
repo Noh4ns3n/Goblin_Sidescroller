@@ -53,7 +53,7 @@ export class Player {
   hitboxYCenter: number;
   images: AnimationSide | null;
 
-  constructor(game : Game) {
+  constructor(game: Game) {
     this.game = game;
     this.facing = "R"; // R = right, L = left
     this.animation = "still";
@@ -88,7 +88,7 @@ export class Player {
     this.hitboxYOffset = 1.8;
     this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
     this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
-    
+
     this.images = {
       alerted: {
         L: null,
@@ -107,38 +107,38 @@ export class Player {
         R: null,
       },
     };
-    
+
     this.images.alerted.L = new Image(60, 45);
     this.images.alerted.L.src =
-    "assets/img/characters/goblin/goblin_alerted_L_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_alerted_L_spritesheet.png";
+
     this.images.alerted.R = new Image(60, 45);
     this.images.alerted.R.src =
-    "assets/img/characters/goblin/goblin_alerted_R_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_alerted_R_spritesheet.png";
+
     this.images.attacking.L = new Image(60, 45);
     this.images.attacking.L.src =
-    "assets/img/characters/goblin/goblin_attacking_L_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_attacking_L_spritesheet.png";
+
     this.images.attacking.R = new Image(60, 45);
     this.images.attacking.R.src =
-    "assets/img/characters/goblin/goblin_attacking_R_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_attacking_R_spritesheet.png";
+
     this.images.running.L = new Image(60, 45);
     this.images.running.L.src =
-    "assets/img/characters/goblin/goblin_running_L_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_running_L_spritesheet.png";
+
     this.images.running.R = new Image(60, 45);
     this.images.running.R.src =
-    "assets/img/characters/goblin/goblin_running_R_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_running_R_spritesheet.png";
+
     this.images.still.L = new Image(60, 45);
     this.images.still.L.src =
-    "assets/img/characters/goblin/goblin_still_L_spritesheet.png";
-    
+      "assets/img/characters/goblin/goblin_still_L_spritesheet.png";
+
     this.images.still.R = new Image(60, 45);
     this.images.still.R.src =
-    "assets/img/characters/goblin/goblin_still_R_spritesheet.png";
+      "assets/img/characters/goblin/goblin_still_R_spritesheet.png";
 
     this.states = [
       new Still(this.game),
@@ -149,7 +149,7 @@ export class Player {
     this.currentState = this.states[0];
   }
 
-  draw(context:CanvasRenderingContext2D) {
+  draw(context: CanvasRenderingContext2D) {
     // see https://www.youtube.com/watch?v=7JtLHJbm0kA&t=830s
     if (this.game.debug) {
       context.beginPath();
@@ -177,20 +177,17 @@ export class Player {
 
   update(input: InputHandler, deltaTime: number) {
     this.checkCollision();
-    if(this.healthpoints === 0) this.game.gameOver = true;
+    if (this.healthpoints === 0) this.game.gameOver = true;
     if (this.game.debug) {
-      
       console.log("this.currentState :>> ", this.currentState);
-                console.log('this.speedX :>> ', this.speedX);
-            console.log('this.speedY :>> ', this.speedY);
+      console.log("this.speedX :>> ", this.speedX);
+      console.log("this.speedY :>> ", this.speedY);
     }
     // ----- MOVEMENT
     // horizontal movement
     if (input.keys.includes("ArrowRight")) {
-      // this.speedX = this.speedXModifier * this.game.speed;
       this.facing = "R";
     } else if (input.keys.includes("ArrowLeft")) {
-      // this.speedX = -this.speedXModifier * this.game.speed;
       this.facing = "L";
     } else {
       this.speedX = 0;
@@ -241,24 +238,24 @@ export class Player {
     }
   }
 
-  setState(state : number) {
+  setState(state: number) {
     this.currentState = this.states[state];
     this.currentState.enter();
   }
 
   checkCollision() {
-
-    if(this.facing === "R") {
+    if (this.facing === "R") {
       this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
       this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
-    }
-    else {
-      this.hitboxXCenter = (this.x + 12) + this.width / this.hitboxXOffset; 
+    } else {
+      this.hitboxXCenter = this.x + 12 + this.width / this.hitboxXOffset;
       this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
     }
-    this.game.enemies.forEach((enemy : Enemy) => {
-      const dx = (enemy.x + enemy.width / enemy.hitboxXOffset) - (this.hitboxXCenter);
-      const dy = (enemy.y + enemy.height / enemy.hitboxYOffset) - (this.hitboxYCenter);
+    this.game.enemies.forEach((enemy: Enemy) => {
+      const dx =
+        enemy.x + enemy.width / enemy.hitboxXOffset - this.hitboxXCenter;
+      const dy =
+        enemy.y + enemy.height / enemy.hitboxYOffset - this.hitboxYCenter;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < enemy.hitboxRadius + this.hitboxRadius) {
         this.healthpoints--;

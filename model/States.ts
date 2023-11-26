@@ -62,6 +62,9 @@ class Jumping extends State {
     }
     enter() {
       this.game.player.animation = "running";
+      // this.game.player.speedY -= 20; 
+      // ???? Why doing this here instead of Player.ts:211 makes character jump twice as high ????
+
     }
     handleInput(input : InputHandler) {
       if (this.game.player.speedY > this.game.player.weight) {
