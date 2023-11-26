@@ -4,8 +4,8 @@ export   class Layer {
   background: Background;
   width: number;
   height: number;
-  image: any;
-  speedModifier: any;
+  image: HTMLImageElement;
+  speedModifier: number;
   x: number;
   x2: number;
   y: number;
@@ -37,7 +37,7 @@ export   class Layer {
       this.x2 = this.x - this.width;
     }
   }
-  draw(context) {
+  draw(context : CanvasRenderingContext2D) {
     context.drawImage(this.image, this.x, this.y, this.width, this.height);
     context.drawImage(this.image, this.x2, this.y, this.width, this.height);
   }

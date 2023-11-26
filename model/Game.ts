@@ -24,7 +24,7 @@ export class Game {
   victory: boolean;
   spanScore: HTMLSpanElement;
   spanVictory: HTMLSpanElement;
-  body: HTMLElement;
+  pVictory: HTMLElement;
 
   constructor(context) {
     this.context = context;
@@ -45,7 +45,7 @@ export class Game {
     this.victory = false;
     this.spanScore = document.getElementById("spanScore");
     this.spanVictory = document.getElementById("spanVictory");
-    this.body = document.body;
+    this.pVictory = document.getElementById("pVictory");
 
   }
 
@@ -65,14 +65,17 @@ export class Game {
   }
 
   handleVictory() {
-    if (this.score >= 20) {
-      this.body.style.color = "green";
-      const message = "Bravo ! A bientôt pour ton anniversaire !";
+    if (this.score >= 2) {
+      document.body.style.color = "green";
+      const message = "Bravo !";
       this.spanVictory.innerHTML = message;
     }
     else {
-      this.body.style.color = "darkred";
-      const message = "Perdu ! Essaye encore !";
+      this.grayscaleCanvas();
+      document.body.style.color = "darkred";
+      this.pVictory.style.top = "27%";
+      this.pVictory.style.fontSize = "80px";
+      const message = "WASTED";
       this.spanVictory.innerHTML = message;
     }
   }
@@ -101,8 +104,7 @@ export class Game {
     
     this.handleEnemies(deltaTime);
     this.displayStatusText();
-    if (this.gameOver) {
-      this.grayscaleCanvas()
+    if (this.gameOver) {  
       this.handleVictory();
     } else requestAnimationFrame(this.animate);
   };
