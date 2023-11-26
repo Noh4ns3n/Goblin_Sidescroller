@@ -9,4 +9,5 @@ window.addEventListener("load", function () {
   canvas.height = CANVAS_HEIGHT;
   const game = new Game(ctx);
   game.animate(0);
+  
 });

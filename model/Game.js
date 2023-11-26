@@ -6,7 +6,7 @@ var Background_1 = require("./Background");
 var Enemy_1 = require("./Enemy");
 var InputHandler_1 = require("./InputHandler");
 var Player_1 = require("./Player");
-require("../scripts/require.js");
+// import "../scripts/require.js";
 var Game = /** @class */ (function () {
     function Game(context) {
         var _this = this;
