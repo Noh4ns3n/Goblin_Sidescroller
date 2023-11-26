@@ -14,7 +14,7 @@ body {
     border: 5px solid white;
 }
 
-#imgGoblin, #imgBoar, .imgBackground {
+img {
     display:none;
 }
 

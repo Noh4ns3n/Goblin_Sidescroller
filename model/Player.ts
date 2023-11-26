@@ -44,7 +44,7 @@ export   class Player {
     ];
     this.currentState = this.states[0];
     this.currentState.enter();
-    this.image = document.getElementById("imgGoblin") as HTMLImageElement;
+    this.image = document.getElementById("imgGoblin-still-R") as HTMLImageElement;
     this.facing = "R"; // R = right, L = left
     this.animation = "still";
     this.width = 66; // displayed width
@@ -163,7 +163,8 @@ export   class Player {
 
   changeSpritesheet() {
     if (this.image) {
-      this.image.src = `assets/img/characters/goblin/goblin_${this.animation}_${this.facing}_spritesheet.png`;
+      // this.image.src = `assets/img/characters/goblin/goblin_${this.animation}_${this.facing}_spritesheet.png`;
+      this.image = document.getElementById(`imgGoblin-${this.animation}-${this.facing}`) as HTMLImageElement;
     }
   }
 

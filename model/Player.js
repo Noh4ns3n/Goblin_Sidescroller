@@ -13,7 +13,7 @@ var Player = /** @class */ (function () {
         ];
         this.currentState = this.states[0];
         this.currentState.enter();
-        this.image = document.getElementById("imgGoblin");
+        this.image = document.getElementById("imgGoblin-still-R");
         this.facing = "R"; // R = right, L = left
         this.animation = "still";
         this.width = 66; // displayed width
@@ -122,7 +122,8 @@ var Player = /** @class */ (function () {
     };
     Player.prototype.changeSpritesheet = function () {
         if (this.image) {
-            this.image.src = "assets/img/characters/goblin/goblin_".concat(this.animation, "_").concat(this.facing, "_spritesheet.png");
+            // this.image.src = `assets/img/characters/goblin/goblin_${this.animation}_${this.facing}_spritesheet.png`;
+            this.image = document.getElementById("imgGoblin-".concat(this.animation, "-").concat(this.facing));
         }
     };
     Player.prototype.setState = function (state) {
