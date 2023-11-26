@@ -1,6 +1,21 @@
 import { Game } from "./Game";
 
-export   class Enemy {
+type Animations =
+  | "still"
+  | "running"
+  | "turning"
+  | "attacking"
+  | "hurt"
+  | "dying";
+type Facings = "L" | "R";
+
+type AnimationSide = {
+  [Animation in Animations]: {
+    [Facing in Facings]: HTMLImageElement;
+  };
+};
+
+export class Enemy {
   image: HTMLImageElement | null;
   gameWidth: any;
   gameHeight: any;
@@ -20,8 +35,11 @@ export   class Enemy {
   fps: number;
   frameTimer: number;
   game: Game;
-  hitboxRadius : number;
-  markedForDeletion : boolean;
+  hitboxRadius: number;
+  markedForDeletion: boolean;
+  animation: Animations;
+  facing: Facings;
+  images: AnimationSide | null;
 
   constructor(game: Game) {
     this.game = game;
@@ -29,7 +47,7 @@ export   class Enemy {
     this.width = 60; // displayed width
     this.height = 60; // displayed height
     this.x = this.game.width;
-    this.yOffset = 8; // account for character offset on sprite
+    this.yOffset = -17; // account for character offset on sprite
     this.y = this.game.height - this.height + this.yOffset;
     this.speedX = 2;
     this.maxFrameCol = 4; // number of columns on spritesheet
@@ -43,6 +61,82 @@ export   class Enemy {
     this.frameTimer = 0;
     this.hitboxRadius = this.width / 2.35;
     this.markedForDeletion = false;
+    this.animation = "running";
+    this.facing = "L";
+    this.images = {
+      still: {
+        L: null,
+        R: null,
+      },
+      running: {
+        L: null,
+        R: null,
+      },
+      turning: {
+        L: null,
+        R: null,
+      },
+      attacking: {
+        L: null,
+        R: null,
+      },
+      hurt: {
+        L: null,
+        R: null,
+      },
+      dying: {
+        L: null,
+        R: null,
+      },
+    };
+
+    this.images.still.L = new Image(60, 45);
+    this.images.still.L.src =
+      "assets/img/characters/boar/boar_still_L_spritesheet.png";
+
+    this.images.still.R = new Image(60, 45);
+    this.images.still.R.src =
+      "assets/img/characters/boar/boar_still_R_spritesheet.png";
+
+    this.images.running.L = new Image(60, 45);
+    this.images.running.L.src =
+      "assets/img/characters/boar/boar_running_L_spritesheet.png";
+
+    this.images.running.R = new Image(60, 45);
+    this.images.running.R.src =
+      "assets/img/characters/boar/boar_running_R_spritesheet.png";
+
+    this.images.turning.L = new Image(60, 45);
+    this.images.turning.L.src =
+      "assets/img/characters/boar/boar_turning_L_spritesheet.png";
+
+    this.images.turning.R = new Image(60, 45);
+    this.images.turning.R.src =
+      "assets/img/characters/boar/boar_turning_R_spritesheet.png";
+
+    this.images.attacking.L = new Image(60, 45);
+    this.images.attacking.L.src =
+      "assets/img/characters/boar/boar_attacking_L_spritesheet.png";
+
+    this.images.attacking.R = new Image(60, 45);
+    this.images.attacking.R.src =
+      "assets/img/characters/boar/boar_attacking_R_spritesheet.png";
+
+    this.images.hurt.L = new Image(60, 45);
+    this.images.hurt.L.src =
+      "assets/img/characters/boar/boar_hurt_L_spritesheet.png";
+
+    this.images.hurt.R = new Image(60, 45);
+    this.images.hurt.R.src =
+      "assets/img/characters/boar/boar_hurt_R_spritesheet.png";
+
+    this.images.dying.L = new Image(60, 45);
+    this.images.dying.L.src =
+      "assets/img/characters/boar/boar_dying_L_spritesheet.png";
+
+    this.images.dying.R = new Image(60, 45);
+    this.images.dying.R.src =
+      "assets/img/characters/boar/boar_dying_R_spritesheet.png";
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -59,7 +153,7 @@ export   class Enemy {
       context.stroke();
     }
     context.drawImage(
-      this.image,
+      this.images[this.animation][this.facing],
       this.frameCol * this.sourceWidth, //sx
       this.frameRow * this.sourceHeight, //sy
       this.sourceWidth, //sw
@@ -97,7 +191,7 @@ export   class Enemy {
     }
 
     // horizontal movement
-    this.x -= (this.speedX * this.game.speed);
+    this.x -= this.speedX * this.game.speed;
     this.checkForDeletion();
   }
 }

@@ -61,7 +61,7 @@ export class Player {
     this.height = 61; // displayed height
     this.leftLimit = 0;
     this.rightLimit = this.game.width - this.width;
-    this.yOffset = 4; // account for character position offset on spritesheet
+    this.yOffset = -22; // account for character position offset on spritesheet
     this.groundLimit = this.game.height - this.height + this.yOffset;
     this.x = 0;
     this.y = this.groundLimit;
@@ -239,6 +239,6 @@ export class Player {
   }
 
   onGround() {
-    return this.y >= this.game.height - this.height;
+    return this.y >= this.game.height - this.height + this.yOffset;
   }
 }

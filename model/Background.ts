@@ -13,6 +13,7 @@ export class Background {
     imageLayer3: HTMLImageElement;
     imageLayer4: HTMLImageElement;
     imageLayer5: HTMLImageElement;
+    imageGround: HTMLImageElement;
     constructor() {
       this.x = 0;
       this.y = 0;
@@ -35,7 +36,10 @@ export class Background {
       this.imageLayer5 = new Image(60,40);
       this.imageLayer5.src = "assets/img/background/plx-5.png";
       const layer5 = new Layer(this, this.imageLayer5, 1.0);
-      this.layers = [layer1, layer2, layer3, layer4, layer5];
+      this.imageGround = new Image(60,40);
+      this.imageGround.src = "assets/img/background/ground.png";
+      const layerGround = new Layer(this, this.imageGround, 1.1);
+      this.layers = [layer1, layer2, layer3, layer4, layer5, layerGround];
     }
     draw(context) {
       this.layers.forEach((layer) => {
