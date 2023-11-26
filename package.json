@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Noh4ns3n/Goblin_Sidescroller#readme",
   "devDependencies": {
+    "ts-loader": "^9.5.1",
     "typescript": "^5.3.2"
   }
 }
