@@ -1,8 +1,9 @@
+import { STATES } from "../const/const";
 import { Background } from "./Background";
 import { Enemy } from "./Enemy";
 import { Game } from "./Game";
 import { InputHandler } from "./InputHandler";
-import { State, Running, Jumping, Falling, Still } from "./States";
+import { State, Running, Jumping, Falling, Still, Attacking } from "./States";
 
 type Animations = "alerted" | "still" | "running" | "attacking";
 type Facings = "L" | "R";
@@ -32,6 +33,7 @@ export class Player {
   speedXAirModifier: number;
   speedY: number;
   jumpCooldown: number;
+  lastJump: number;
   weight: number;
   sourceWidth: number;
   sourceHeight: number;
@@ -52,6 +54,9 @@ export class Player {
   hitboxXCenter: number;
   hitboxYCenter: number;
   images: AnimationSide | null;
+  lastAttack: number;
+  attackCooldown: number;
+  attackDuration: number;
 
   constructor(game: Game) {
     this.game = game;
@@ -72,7 +77,8 @@ export class Player {
     this.speedXAirModifier = 5;
     this.traveledX = 0;
     this.speedY = 0;
-    this.jumpCooldown = 1000;
+    this.jumpCooldown = 400;
+    this.lastJump = this.jumpCooldown;
     this.weight = 1.2;
     this.sourceWidth = 66; // width of each sprite on spritesheet
     this.sourceHeight = 61; // height of each sprite on spritesheet
@@ -88,6 +94,9 @@ export class Player {
     this.hitboxYOffset = 1.8;
     this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
     this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
+    this.lastAttack = 0;
+    this.attackCooldown = 300;
+    this.attackDuration = 500;
 
     this.images = {
       alerted: {
@@ -145,6 +154,7 @@ export class Player {
       new Running(this.game),
       new Jumping(this.game),
       new Falling(this.game),
+      new Attacking(this.game),
     ];
     this.currentState = this.states[0];
   }
@@ -176,7 +186,8 @@ export class Player {
   }
 
   update(input: InputHandler, deltaTime: number) {
-    this.checkCollision();
+    this.lastAttack += deltaTime;
+    this.lastJump += deltaTime;
     if (this.healthpoints === 0) this.game.gameOver = true;
     if (this.game.debug) {
       console.log("this.currentState :>> ", this.currentState);
@@ -192,6 +203,8 @@ export class Player {
     } else {
       this.speedX = 0;
     }
+
+    this.checkCollision();
     this.x += this.speedX;
     this.traveledX += this.speedX;
     this.currentState.handleInput(input);
@@ -207,8 +220,13 @@ export class Player {
       this.game.background.speedX = 0;
     }
     // vertical movement
-    if (input.keys.includes("ArrowUp") && this.onGround()) {
+    if (
+      input.keys.includes("ArrowUp") &&
+      this.onGround() &&
+      this.lastJump > this.jumpCooldown
+    ) {
       this.speedY -= 20;
+      this.lastJump = 0;
     }
     this.y += this.speedY;
 
@@ -217,6 +235,7 @@ export class Player {
     } else {
       this.speedY = 0;
     }
+
     // vertical boundaries
     if (this.y > this.groundLimit) this.y = this.groundLimit;
 
@@ -244,6 +263,7 @@ export class Player {
   }
 
   checkCollision() {
+    // change hitbox position depending on where player is facing
     if (this.facing === "R") {
       this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
       this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
@@ -251,6 +271,7 @@ export class Player {
       this.hitboxXCenter = this.x + 12 + this.width / this.hitboxXOffset;
       this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
     }
+
     this.game.enemies.forEach((enemy: Enemy) => {
       const dx =
         enemy.x + enemy.width / enemy.hitboxXOffset - this.hitboxXCenter;
@@ -258,10 +279,20 @@ export class Player {
         enemy.y + enemy.height / enemy.hitboxYOffset - this.hitboxYCenter;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < enemy.hitboxRadius + this.hitboxRadius) {
-        this.healthpoints--;
-        enemy.animation = "turning";
-        enemy.speedX = -enemy.speedX;
-        this.speedY = -(this.speedY + 3);
+        if(this.currentState !== this.states[STATES.ATTACKING] && !enemy.hurt) {
+          this.healthpoints--;
+          this.speedX = -10;
+          this.speedY = -15;
+          this.game.displayHearts();
+        }
+        else if(this.currentState === this.states[STATES.ATTACKING]) {
+          enemy.frame = 0;
+          enemy.animation = "dying";
+          enemy.hurt = true;
+          while (enemy.speedX > enemy.weight) {
+            enemy.speedX -= enemy.weight;
+          }
+        }
       }
     });
   }

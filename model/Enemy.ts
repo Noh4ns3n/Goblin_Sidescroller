@@ -24,6 +24,7 @@ export class Enemy {
   yOffset: number;
   x: any;
   y: number;
+  weight: number;
   speedX: number;
   maxFrameCol: number;
   maxFrameRow: number;
@@ -38,6 +39,9 @@ export class Enemy {
   hitboxRadius: number;
   hitboxXOffset: number;
   hitboxYOffset: number;
+  hurt:boolean;
+  hurtTimer:number
+  deathTimer: number;
   markedForDeletion: boolean;
   animation: Animations;
   facing: Facings;
@@ -52,6 +56,10 @@ export class Enemy {
     this.yOffset = -17; // account for character offset on sprite
     this.y = this.game.height - this.height + this.yOffset;
     this.speedX = 2;
+    this.weight = 0.2;
+    this.hurt = false;
+    this.hurtTimer = 0;
+    this.deathTimer = 850;
     this.maxFrameCol = 4; // number of columns on spritesheet
     this.maxFrameRow = 2; // number or rows on spritesheet
     this.sourceWidth = 124; // width of each sprite on spritesheet
@@ -202,6 +210,14 @@ export class Enemy {
       this.frameRow = Math.floor(this.frame / this.maxFrameCol);
     } else {
       this.frameTimer += deltaTime;
+    }
+
+    if(this.hurt) {
+      this.hurtTimer += this.game.deltaTime;
+      if(this.hurtTimer >= this.deathTimer) {
+        this.markedForDeletion = true;
+        this.game.score += 2;
+      }
     }
 
     // horizontal movement

@@ -1,4 +1,10 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH, IMG_HEARTS } from "../const/const";
+import {
+  CANVAS2_HEIGHT,
+  CANVAS2_WIDTH,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  IMG_HEARTS,
+} from "../const/const";
 import { Background } from "./Background";
 import { Enemy } from "./Enemy";
 import { InputHandler } from "./InputHandler";
@@ -18,6 +24,7 @@ export class Game {
   enemyTimer: number;
   enemies: Enemy[];
   context: CanvasRenderingContext2D;
+  context2: CanvasRenderingContext2D;
   debug: boolean;
   score: number;
   speed: number;
@@ -25,9 +32,16 @@ export class Game {
   victory: boolean;
   spanScore: HTMLSpanElement;
   heartImages: HTMLImageElement[];
+  framerate: number;
+  lastFrame: number;
+  playerLastHealth: number;
 
-  constructor(context: CanvasRenderingContext2D) {
+  constructor(
+    context: CanvasRenderingContext2D,
+    context2: CanvasRenderingContext2D
+  ) {
     this.context = context;
+    this.context2 = context2;
     this.height = CANVAS_HEIGHT;
     this.width = CANVAS_WIDTH;
     this.lastTime = 0;
@@ -45,13 +59,23 @@ export class Game {
     this.input = new InputHandler(this);
     this.background = new Background();
     this.player = new Player(this);
-    this.heartImages = [new Image(), new Image(), new Image()];
-    this.heartImages[0].src = "assets/img/display/heart_full.png";
-    this.heartImages[0].width = 50;
-    this.heartImages[1].src = "assets/img/display/heart_half.png";
-    this.heartImages[1].width = 50;
-    this.heartImages[2].src = "assets/img/display/heart_empty.png";
-    this.heartImages[2].width = 50;
+    this.heartImages = this.prepareHUDImages("heart");
+    this.framerate = 200;
+    this.lastFrame = 0;
+    this.playerLastHealth = this.player.startingHealthpoints;
+  }
+
+  prepareHUDImages(keyword: string): HTMLImageElement[] {
+    if (keyword === "heart") {
+      const imagesHUD = [new Image(), new Image(), new Image()];
+      imagesHUD[0].src = "assets/img/display/heart_full.png";
+      imagesHUD[0].width = 50;
+      imagesHUD[1].src = "assets/img/display/heart_half.png";
+      imagesHUD[1].width = 50;
+      imagesHUD[2].src = "assets/img/display/heart_empty.png";
+      imagesHUD[2].width = 50;
+      return imagesHUD;
+    }
   }
 
   handleEnemies(deltaTime: number) {
@@ -74,42 +98,71 @@ export class Game {
     const spanVictory2: HTMLSpanElement =
       document.getElementById("spanVictory");
     const pVictory: HTMLElement = document.getElementById("pVictory");
-    const pVictory2: HTMLElement = document.getElementById("pVictory");
+    const pVictory2: HTMLElement = document.getElementById("pVictory2");
     const message: string = "Bravo !";
 
     if (this.score >= 20) {
       document.body.style.color = "green";
+      pVictory.style.top = "-25%";
+      pVictory.style.fontSize = "80px";
       spanVictory.innerHTML = message;
     } else {
       this.grayscaleCanvas();
       const message: string = "Perdu !";
       document.body.style.color = "darkred";
-      pVictory.style.top = "25%";
+      pVictory.style.top = "-25%";
       pVictory.style.fontSize = "80px";
-      pVictory2.style.top = "25%";
-      pVictory2.style.fontSize = "80px";
       spanVictory.innerHTML = message;
-      spanVictory2.innerHTML = message;
     }
   }
 
-  updateHearts() {
-    const divHearts: HTMLElement = document.getElementById("containerHearts");
-    divHearts.innerHTML = "";
-    const fullHearts: number = Math.floor(this.player.healthpoints / 2);
-    const halfHeart: boolean = this.player.healthpoints % 2 === 1;
-    for (let i: number = 0; i < fullHearts; i++) {
-      divHearts.appendChild(this.heartImages[IMG_HEARTS.FULL].cloneNode(true));
-    }
-    if (halfHeart) {
-      divHearts.appendChild(this.heartImages[IMG_HEARTS.HALF]);
-    }
-    
-    for (let occupiedSlots: number = (halfHeart ? 1 : 0)+fullHearts;
-      occupiedSlots < this.player.startingHealthpoints / 2;
-      occupiedSlots++
-    ) {
-      divHearts.appendChild(this.heartImages[IMG_HEARTS.EMPTY].cloneNode(true));
+  displayHearts() {
+    const updateHearts : boolean = this.playerLastHealth !== this.player.healthpoints;
+    if (updateHearts || this.player.healthpoints === 0 || this.lastTime < 1000) {
+      this.playerLastHealth = this.player.healthpoints;
+      this.context2.clearRect(0, 0, CANVAS2_WIDTH, CANVAS2_HEIGHT);
+      let fullHearts: number = Math.floor(this.player.healthpoints / 2);
+      let halfHeart: number = this.player.healthpoints % 2 === 1 ? 1 : 0;
+      let emptyHearts: number =
+        this.player.startingHealthpoints / 2 - fullHearts - halfHeart;
+      const imgWidth: number = this.heartImages[IMG_HEARTS.FULL].width;
+      const positionY: number = CANVAS2_HEIGHT / 2 - imgWidth / 2;
+
+      for (let i: number = 0; i < this.player.startingHealthpoints / 2; i++) {
+        // positionX = ( sizeCanvas - ( sizeImage * numberImages ) / 2 ) + ( indexImage * sizeImage )
+        let positionX: number =
+          (CANVAS2_WIDTH - (imgWidth * this.player.startingHealthpoints) / 2) /
+            2 +
+          i * imgWidth;
+        if (fullHearts > 0) {
+          fullHearts--;
+          this.context2.drawImage(
+            this.heartImages[IMG_HEARTS.FULL],
+            positionX,
+            positionY,
+            50,
+            50
+          );
+        } else if (halfHeart > 0) {
+          halfHeart--;
+          this.context2.drawImage(
+            this.heartImages[IMG_HEARTS.HALF],
+            positionX,
+            positionY,
+            50,
+            50
+          );
+        } else if (emptyHearts > 0) {
+          emptyHearts--;
+          this.context2.drawImage(
+            this.heartImages[IMG_HEARTS.EMPTY],
+            positionX,
+            positionY,
+            50,
+            50
+          );
+        }
+      }
     }
   }
 
@@ -134,20 +187,31 @@ export class Game {
   animate = (timeStamp: number) => {
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
-    this.context.clearRect(0, 0, this.width, this.height);
-    this.background.draw(this.context);
-    this.background.update();
-    this.player.draw(this.context);
-    this.player.update(this.input, this.deltaTime);
-    this.handleEnemies(this.deltaTime);
-    this.displayStatusText();
-    this.updateHearts();
+    this.lastFrame += this.deltaTime;
+    if (this.lastFrame > 1000 / this.framerate) {
+      this.context.clearRect(0, 0, this.width, this.height);
+      this.background.draw(this.context);
+      this.background.update();
+      this.handleEnemies(this.deltaTime);
+      this.player.draw(this.context);
+      this.player.update(this.input, this.deltaTime);
+      this.displayStatusText();
+      this.lastFrame = 0;
+    }
+    this.displayHearts();
     if (this.gameOver) {
       this.handleVictory();
     } else requestAnimationFrame(this.animate);
   };
 
   displayStatusText() {
-    this.spanScore.innerHTML = this.score.toString();
+    this.spanScore.innerHTML = `${this.score.toString()} ${
+      this.debug
+        ? "</br> FPS : " +
+          Math.floor(1000 / this.deltaTime) +
+          " maxUpdate/s : " +
+          this.framerate
+        : ""
+    }`;
   }
 }
