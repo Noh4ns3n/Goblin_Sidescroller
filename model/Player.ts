@@ -70,7 +70,7 @@ export class Player {
     this.rightLimit = this.game.width - this.width;
     this.yOffset = -22; // account for character position offset on spritesheet
     this.groundLimit = this.game.height - this.height + this.yOffset;
-    this.x = 0;
+    this.x = this.game.width/2 - this.width/2;
     this.y = this.groundLimit;
     this.speedX = 0;
     this.speedXModifier = 3;
@@ -95,7 +95,7 @@ export class Player {
     this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
     this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
     this.lastAttack = 0;
-    this.attackCooldown = 300;
+    this.attackCooldown = 1000;
     this.attackDuration = 500;
 
     this.images = {
@@ -283,7 +283,7 @@ export class Player {
           this.currentState !== this.states[STATES.ATTACKING] &&
           !enemy.hurt
         ) {
-          this.healthpoints--;
+          // this.healthpoints--;
           this.speedX = -10;
           this.speedY = -15;
           this.game.displayHearts();
@@ -293,7 +293,7 @@ export class Player {
           enemy.frame = 0;
           enemy.animation = "dying";
           while (enemy.speedX > enemy.weight) {
-            enemy.speedX -= enemy.weight;
+            enemy.speedX -= (enemy.weight*0.9);
           }
         }
       }

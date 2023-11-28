@@ -21,6 +21,7 @@ export class Game {
   deltaTime: number;
   enemyInterval: number;
   randomEnemyInterval: number;
+  enemyIntervalReduction: number;
   enemyTimer: number;
   enemies: Enemy[];
   context: CanvasRenderingContext2D;
@@ -35,6 +36,7 @@ export class Game {
   framerate: number;
   lastFrame: number;
   playerLastHealth: number;
+  lastScore:number;
 
   constructor(
     context: CanvasRenderingContext2D,
@@ -46,6 +48,7 @@ export class Game {
     this.width = CANVAS_WIDTH;
     this.lastTime = 0;
     this.deltaTime = 0;
+    this.enemyIntervalReduction = 0;
     this.enemyInterval = 1000;
     this.randomEnemyInterval = Math.random() * 1000 + 500;
     this.enemyTimer = 0;
@@ -63,6 +66,8 @@ export class Game {
     this.framerate = 200;
     this.lastFrame = 0;
     this.playerLastHealth = this.player.startingHealthpoints;
+    this.lastScore = 0;
+
   }
 
   prepareHUDImages(keyword: string): HTMLImageElement[] {
@@ -79,6 +84,7 @@ export class Game {
   }
 
   handleEnemies(deltaTime: number) {
+    // enemyInterval 10% reduction every 20 score points
     if (this.enemyTimer > this.enemyInterval + this.randomEnemyInterval) {
       this.enemies.push(new Enemy(this));
       this.randomEnemyInterval = Math.random() * 1000;
@@ -163,6 +169,16 @@ export class Game {
           );
         }
       }
+    }
+  }
+
+  reduceEnemyInterval() {
+    if(this.score > this.lastScore + 20) {
+      this.lastScore = this.score;
+      // this.enemyIntervalReduction = Math.floor(this.score / 20) * 10;
+      // this.enemyInterval = this.enemyInterval * (1 - this.enemyIntervalReduction / 100);
+      this.enemyInterval *= 0.9;
+      console.log('this.enemyInterval :>> ', this.enemyInterval);
     }
   }
 

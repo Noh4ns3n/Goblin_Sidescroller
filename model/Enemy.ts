@@ -47,6 +47,7 @@ export class Enemy {
   facing: Facings;
   images: AnimationSide | null;
 
+
   constructor(game: Game) {
     this.game = game;
     this.image = document.getElementById("imgBoar") as HTMLImageElement;
@@ -76,6 +77,7 @@ export class Enemy {
     this.animation = "running";
     this.facing = "L";
     this.images = {
+
       still: {
         L: null,
         R: null,
@@ -188,10 +190,12 @@ export class Enemy {
   }
 
   checkForDeletion() {
+    this.game.reduceEnemyInterval();
     if (this.x < 0 - this.width) {
       this.markedForDeletion = true;
       this.game.score++;
     }
+    
   }
 
   update(deltaTime: number) {
