@@ -216,7 +216,6 @@ export class Enemy {
       this.hurtTimer += this.game.deltaTime;
       if(this.hurtTimer >= this.deathTimer) {
         this.markedForDeletion = true;
-        this.game.score += 2;
       }
     }
 

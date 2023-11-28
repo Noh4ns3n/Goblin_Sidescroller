@@ -279,16 +279,19 @@ export class Player {
         enemy.y + enemy.height / enemy.hitboxYOffset - this.hitboxYCenter;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < enemy.hitboxRadius + this.hitboxRadius) {
-        if(this.currentState !== this.states[STATES.ATTACKING] && !enemy.hurt) {
+        if (
+          this.currentState !== this.states[STATES.ATTACKING] &&
+          !enemy.hurt
+        ) {
           this.healthpoints--;
           this.speedX = -10;
           this.speedY = -15;
           this.game.displayHearts();
-        }
-        else if(this.currentState === this.states[STATES.ATTACKING]) {
+        } else if (this.currentState === this.states[STATES.ATTACKING]) {
+          if(!enemy.hurt) this.game.score += 2;
+          enemy.hurt = true;
           enemy.frame = 0;
           enemy.animation = "dying";
-          enemy.hurt = true;
           while (enemy.speedX > enemy.weight) {
             enemy.speedX -= enemy.weight;
           }
