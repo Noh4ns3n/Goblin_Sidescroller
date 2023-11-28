@@ -39,14 +39,16 @@ export class Enemy {
   hitboxRadius: number;
   hitboxXOffset: number;
   hitboxYOffset: number;
-  hurt:boolean;
-  hurtTimer:number
+  hurt: boolean;
+  hurtTimer: number;
   deathTimer: number;
   markedForDeletion: boolean;
   animation: Animations;
   facing: Facings;
+  sounds: HTMLAudioElement[];
+  hasGrunted: boolean;
+  deathSounds: HTMLAudioElement[];
   images: AnimationSide | null;
-
 
   constructor(game: Game) {
     this.game = game;
@@ -76,8 +78,28 @@ export class Enemy {
     this.markedForDeletion = false;
     this.animation = "running";
     this.facing = "L";
-    this.images = {
+    this.hasGrunted = false;
+    this.sounds = [
+      new Audio("assets/audio/boar/boar_grunt1.mp3"),
+      new Audio("assets/audio/boar/boar_grunt2.mp3"),
+      new Audio("assets/audio/boar/boar_grunt3.mp3"),
+      new Audio("assets/audio/boar/boar_grunt4.mp3"),
+      new Audio("assets/audio/boar/boar_grunt5.mp3"),
+    ];
 
+    this.deathSounds = [
+      // new Audio("assets/audio/boar/boar_grunt1.mp3"),
+      new Audio("assets/audio/boar/boar_grunt2.mp3"),
+      new Audio("assets/audio/boar/boar_grunt3.mp3"),
+      new Audio("assets/audio/boar/boar_grunt4.mp3"),
+      new Audio("assets/audio/boar/boar_grunt5.mp3"),
+      new Audio("assets/audio/boar/boar_death1.mp3"),
+      new Audio("assets/audio/boar/boar_death2.mp3"),
+      new Audio("assets/audio/boar/boar_death3.mp3"),
+      new Audio("assets/audio/boar/boar_death4.mp3"),
+    ];
+
+    this.images = {
       still: {
         L: null,
         R: null,
@@ -155,7 +177,6 @@ export class Enemy {
 
   draw(context: CanvasRenderingContext2D) {
     if (this.game.debug) {
-     
       context.beginPath();
       context.arc(
         this.x + this.width / this.hitboxXOffset,
@@ -179,14 +200,22 @@ export class Enemy {
     );
   }
 
-  checkForCoward() {
-    if(this.game.player.x === this.game.player.leftLimit) {
-      this.fps = 22;
+  playSound() {
+    if (!this.hasGrunted) {
+      this.hasGrunted = true;
+      const sound = Math.floor(Math.random() * this.deathSounds.length);
+      if(Math.random() * 2 > 1) {
+      this.deathSounds[sound].play();
+      }
     }
-    else {
+  }
+
+  checkForCoward() {
+    if (this.game.player.x === this.game.player.leftLimit) {
+      this.fps = 22;
+    } else {
       this.fps = 13;
     }
-
   }
 
   checkForDeletion() {
@@ -195,7 +224,6 @@ export class Enemy {
       this.markedForDeletion = true;
       this.game.score++;
     }
-    
   }
 
   update(deltaTime: number) {
@@ -216,9 +244,9 @@ export class Enemy {
       this.frameTimer += deltaTime;
     }
 
-    if(this.hurt) {
+    if (this.hurt) {
       this.hurtTimer += this.game.deltaTime;
-      if(this.hurtTimer >= this.deathTimer) {
+      if (this.hurtTimer >= this.deathTimer) {
         this.markedForDeletion = true;
       }
     }

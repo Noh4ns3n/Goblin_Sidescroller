@@ -283,7 +283,7 @@ export class Player {
           this.currentState !== this.states[STATES.ATTACKING] &&
           !enemy.hurt
         ) {
-          // this.healthpoints--;
+          this.healthpoints--;
           this.speedX = -10;
           this.speedY = -15;
           this.game.displayHearts();
@@ -292,6 +292,10 @@ export class Player {
           enemy.hurt = true;
           enemy.frame = 0;
           enemy.animation = "dying";
+          // if(Math.random() * 1000 > 990) {
+            enemy.playSound();
+          // }
+          
           while (enemy.speedX > enemy.weight) {
             enemy.speedX -= (enemy.weight*0.9);
           }
