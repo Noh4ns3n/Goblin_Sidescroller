@@ -38,7 +38,7 @@ class Still extends State {
       this.game.player.setState(STATES.JUMPING);
     }
     if (
-      input.keys.includes("a") &&
+      (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
       this.game.player.lastAttack <= this.game.deltaTime
     ) {
       this.game.player.setState(STATES.ATTACKING);
