@@ -15,14 +15,6 @@ type AnimationSide = {
 };
 
 export class Player {
-  
-  blast: HTMLImageElement;
-  maxFrameCol: number;
-  maxFrameRow: number;
-  frame: number;
-  frameCol: number;
-  frameRow: number;
-
   facing: Facings;
   animation: Animations;
   readyToGainLife: boolean;
@@ -112,8 +104,6 @@ export class Player {
     this.attackDuration = 500;
     this.soundAxeReady = new Audio("assets/audio/axe/axe_unsheath.mp3");
     this.soundAxeHit = new Audio("assets/audio/axe/axe_hit.mp3");
-    this.blast = new Image(60,40);
-    this.blast.src = "assets/img/fx/blast_fx.png";
     this.attackIndicated = true;
       this.images =
         {
@@ -199,18 +189,6 @@ export class Player {
     }
     context.drawImage(
       this.images[this.animation][this.facing],
-      this.frameCol * this.sourceWidth, // sx
-      this.frameRow * this.sourceHeight, // sy
-      this.width, // sw
-      this.height, // sh
-      this.x,
-      this.y,
-      this.width,
-      this.height
-    );
-
-    context.drawImage(
-      this.blast,
       this.frameCol * this.sourceWidth, // sx
       this.frameRow * this.sourceHeight, // sy
       this.width, // sw
