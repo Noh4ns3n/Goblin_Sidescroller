@@ -4,82 +4,33 @@ import { InputHandler } from "./InputHandler";
 import { Player } from "./Player";
 
 class State {
-  state: String;
-  constructor(state) {
+  state: string;
+  constructor(state: string) {
     this.state = state;
   }
 }
 
 class Still extends State {
   game: Game;
-  constructor(game) {
+  constructor(game: Game) {
     super("STILL");
     this.game = game;
   }
   enter() {
     this.game.player.animation = "still";
   }
-  handleInput(input: InputHandler) {
-    if (input.keys.includes("ArrowRight")) {
-      this.game.player.facing = "R";
-      this.game.player.speedX =
-        this.game.player.speedXModifier * this.game.speed;
-      this.game.player.setState(STATES.RUNNING);
-    } else if (input.keys.includes("ArrowLeft")) {
-      this.game.player.facing = "L";
-      this.game.player.speedX =
-        -this.game.player.speedXModifier * this.game.speed;
-      this.game.player.setState(STATES.RUNNING);
-    }
-    if (
-      input.keys.includes("ArrowUp") &&
-      this.game.player.lastJump > this.game.player.jumpCooldown
-    ) {
-      this.game.player.setState(STATES.JUMPING);
-    }
-    if (
-      (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
-      this.game.player.lastAttack <= this.game.deltaTime
-    ) {
-      this.game.player.setState(STATES.ATTACKING);
-    }
-  }
+  handleInput(input: InputHandler) {}
 }
 class Running extends State {
   game: Game;
-  constructor(game) {
+  constructor(game: Game) {
     super("RUNNING");
     this.game = game;
   }
   enter() {
     this.game.player.animation = "running";
   }
-  handleInput(input) {
-    if (input.keys.includes("ArrowRight")) {
-      this.game.player.facing = "R";
-      this.game.player.speedX =
-        this.game.player.speedXModifier * this.game.speed;
-    } else if (input.keys.includes("ArrowLeft")) {
-      this.game.player.facing = "L";
-      this.game.player.speedX =
-        -this.game.player.speedXModifier * this.game.speed;
-    }
-   
-    if (
-      input.keys.includes("ArrowUp") &&
-      this.game.player.lastJump > this.game.player.jumpCooldown
-    )
-      this.game.player.setState(STATES.JUMPING);
-      
-      if (
-        (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
-        this.game.player.lastAttack <= this.game.deltaTime
-      ) {
-        this.game.player.setState(STATES.ATTACKING);
-      }
-
-    if (this.game.player.speedX === 0 && this.game.player.currentState.state !== "attacking") this.game.player.setState(STATES.STILL);
-  }
+  handleInput(input: InputHandler) {}
 }
 
 class Jumping extends State {
@@ -90,15 +41,11 @@ class Jumping extends State {
   }
   enter() {
     this.game.player.animation = "running";
-
-    // this.game.player.speedY -= 20;
-    // ???? Why doing this here instead of Player.ts:211 makes character jump twice as high ????
   }
   handleInput(input: InputHandler) {
-    if (this.game.player.speedY > this.game.player.weight) {
-      this.game.player.setState(STATES.FALLING);
-    }
-    
+    // when jumping : attack allowed, horizontal speed increased
+
+    // horizontal movement
     if (input.keys.includes("ArrowRight")) {
       this.game.player.facing = "R";
       this.game.player.speedX =
@@ -107,13 +54,30 @@ class Jumping extends State {
       this.game.player.facing = "L";
       this.game.player.speedX =
         -this.game.player.speedXAirModifier * this.game.speed;
+    } else {
+      this.game.player.speedX = 0;
     }
-   
+
+    // update position
+    this.game.player.x += this.game.player.speedX * (this.game.deltaTime / 8);
+    this.game.player.y += this.game.player.speedY * (this.game.deltaTime / 10);
+
     if (
       (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
       this.game.player.lastAttack <= this.game.deltaTime
     ) {
       this.game.player.setState(STATES.ATTACKING);
+    }
+
+    // adding weight gradually
+    if (!this.game.player.onGround()) {
+      this.game.player.speedY +=
+        this.game.player.weight * (this.game.deltaTime / 10);
+    }
+
+    // switch to falling state
+    if (this.game.player.speedY > this.game.player.weight) {
+      this.game.player.setState(STATES.FALLING);
     }
   }
 }
@@ -127,6 +91,9 @@ class Falling extends State {
     this.game.player.animation = "running";
   }
   handleInput(input: InputHandler) {
+    // when falling : attack allowed, horizontal speed increased
+
+    // horizontal movement (speedXAirModifier)
     if (input.keys.includes("ArrowRight")) {
       this.game.player.facing = "R";
       this.game.player.speedX =
@@ -135,14 +102,34 @@ class Falling extends State {
       this.game.player.facing = "L";
       this.game.player.speedX =
         -this.game.player.speedXAirModifier * this.game.speed;
+    } else {
+      this.game.player.speedX = 0;
     }
+
+    // update position
+    this.game.player.x += this.game.player.speedX * (this.game.deltaTime / 8);
+    this.game.player.y += this.game.player.speedY * (this.game.deltaTime / 10);
+
     if (
       (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
       this.game.player.lastAttack <= this.game.deltaTime
     ) {
       this.game.player.setState(STATES.ATTACKING);
     }
-    if (this.game.player.onGround() && this.game.player.currentState.state !== "attacking") {
+
+    // adding weight gradually, stop on ground
+    if (!this.game.player.onGround()) {
+      this.game.player.speedY +=
+        this.game.player.weight * (this.game.deltaTime / 10);
+    } else {
+      this.game.player.speedY = 0;
+    }
+
+    // return to still state
+    if (
+      this.game.player.onGround() &&
+      this.game.player.currentState.state !== "ATTACKING"
+    ) {
       this.game.player.setState(STATES.STILL);
     }
   }
@@ -151,7 +138,7 @@ class Falling extends State {
 class Attacking extends State {
   game: Game;
   attackTimer: number;
- 
+
   constructor(game: Game) {
     super("ATTACKING");
     this.game = game;
@@ -165,8 +152,13 @@ class Attacking extends State {
     this.attackTimer = this.game.player.attackDuration;
   }
   handleInput(input: InputHandler) {
+    // remains in attacking state for duration = attackTimer
     this.attackTimer -= this.game.deltaTime;
-    
+    if (this.attackTimer <= this.game.deltaTime) {
+      this.game.player.setState(STATES.STILL);
+    }
+
+    // horizontal movement
     if (input.keys.includes("ArrowRight")) {
       this.game.player.facing = "R";
       this.game.player.speedX =
@@ -175,17 +167,28 @@ class Attacking extends State {
       this.game.player.facing = "L";
       this.game.player.speedX =
         -this.game.player.speedXModifier * this.game.speed;
+    } else {
+      this.game.player.speedX = 0;
     }
-    if (this.attackTimer <= 0) {
-      this.game.player.setState(STATES.STILL);
-      if (
-        input.keys.includes("ArrowUp") &&
-        this.game.player.lastJump > this.game.player.jumpCooldown
-      )
-        this.game.player.setState(STATES.JUMPING);
-      if (this.game.player.speedX === 0)
-        this.game.player.setState(STATES.STILL);
+
+    // vertical movement
+    if (
+      input.keys.includes("ArrowUp") &&
+      this.game.player.lastJump > this.game.player.jumpCooldown
+    ) {
+      this.game.player.lastJump = 0;
+      this.game.player.speedY -= 20;
     }
+    if (!this.game.player.onGround()) {
+      this.game.player.speedY +=
+        this.game.player.weight * (this.game.deltaTime / 10);
+    } else {
+      this.game.player.speedY = 0;
+    }
+
+    // update position
+    this.game.player.x += this.game.player.speedX * (this.game.deltaTime / 8);
+    this.game.player.y += this.game.player.speedY * (this.game.deltaTime / 10);
   }
 }
 

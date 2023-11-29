@@ -48,6 +48,7 @@ export class Player {
   background: Background;
   game: Game;
   states: State[];
+  specialStates: string[];
   currentState: any;
   hitboxRadius: number;
   hitboxXOffset: number;
@@ -78,7 +79,7 @@ export class Player {
     this.x = this.game.width / 3 - this.width / 2;
     this.y = this.groundLimit;
     this.speedX = 0;
-    this.speedXModifier = 3;
+    this.speedXModifier = 4;
     this.speedXAirModifier = 5;
     this.traveledX = 0;
     this.speedY = 0;
@@ -164,6 +165,7 @@ export class Player {
       new Attacking(this.game),
     ];
     this.currentState = this.states[0];
+    this.specialStates = ["JUMPING", "ATTACKING", "FALLING"];
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -199,35 +201,93 @@ export class Player {
     );
   }
 
+  handleInput(input: InputHandler) {
+    // ----- MOVEMENT
+    // horizontal movement
+    if (input.keys.includes("ArrowRight")) {
+      if(this.onGround()) this.game.player.setState(STATES.RUNNING);
+      this.game.player.facing = "R";
+      this.game.player.speedX =
+        this.game.player.speedXModifier * this.game.speed;
+    } else if (input.keys.includes("ArrowLeft")) {
+      if(this.onGround()) this.game.player.setState(STATES.RUNNING);
+      this.game.player.facing = "L";
+      this.game.player.speedX =
+        -this.game.player.speedXModifier * this.game.speed;
+    } else {
+      this.speedX = 0;
+    }
+
+    // vertical movement
+    if (
+      input.keys.includes("ArrowUp") &&
+      this.onGround() &&
+      this.lastJump > this.jumpCooldown
+    ) {
+      this.game.player.setState(STATES.JUMPING);
+      this.lastJump = 0;
+      this.speedY -= 20;
+    }
+    
+    this.x += this.speedX * (this.game.deltaTime / 8);
+    this.y += this.speedY * (this.game.deltaTime / 10);
+    
+    if (!this.onGround()) {
+      this.speedY += this.weight * (this.game.deltaTime / 10);
+    } else {
+      this.speedY = 0;
+    }
+
+    // ----- STATES
+    if (
+      this.currentState.state === "JUMPING" &&
+      this.speedY > this.weight
+    ) {
+      this.setState(STATES.FALLING);
+    }
+
+    if (
+      (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
+      this.lastAttack <= this.game.deltaTime
+    ) {
+      this.setState(STATES.ATTACKING);
+    }
+
+    if (
+      this.onGround() &&
+      this.currentState.state !== "ATTACKING" &&
+      this.speedX === 0
+    ) {
+      this.setState(STATES.STILL);
+    }
+  }
+
   update(input: InputHandler, deltaTime: number) {
+
     this.lastAttack -= deltaTime;
-    if (!this.attackIndicated && this.lastAttack <= this.game.deltaTime) {
+    this.lastJump += deltaTime;
+
+    if (!this.attackIndicated && this.lastAttack - 200 <= this.game.deltaTime) {
       this.soundAxeReady.play();
       this.attackIndicated = true;
     }
 
-    this.lastJump += deltaTime;
-
-    if (this.healthpoints === 0) this.game.gameOver = true;
     if (this.game.debug) {
       console.log("this.currentState :>> ", this.currentState);
       console.log("this.speedX :>> ", this.speedX);
       console.log("this.speedY :>> ", this.speedY);
     }
-    // ----- MOVEMENT
-    // horizontal movement
-    if (input.keys.includes("ArrowRight")) {
-      this.facing = "R";
-    } else if (input.keys.includes("ArrowLeft")) {
-      this.facing = "L";
-    } else {
-      this.speedX = 0;
-    }
 
     this.checkCollision();
-    this.x += this.speedX * (this.game.deltaTime / 8);
+
     this.traveledX += this.speedX;
-    this.currentState.handleInput(input);
+
+    // if not in special state (attacking, jumping), using generic inputs from player
+    if (this.specialStates.includes(this.currentState.state)) {
+      this.currentState.handleInput(input);
+    } else {
+      this.handleInput(input);
+    }
 
     // horizontal boundaries
     if (this.x < this.leftLimit) {
@@ -240,22 +300,6 @@ export class Player {
         -this.speedX * this.game.speed * (this.game.deltaTime / 10);
     } else {
       this.game.background.speedX = 0;
-    }
-    // vertical movement
-    if (
-      input.keys.includes("ArrowUp") &&
-      this.onGround() &&
-      this.lastJump > this.jumpCooldown
-    ) {
-      this.speedY -= 20;
-      this.lastJump = 0;
-    }
-    this.y += this.speedY * (this.game.deltaTime / 10);
-
-    if (!this.onGround()) {
-      this.speedY += this.weight * (this.game.deltaTime / 10);
-    } else {
-      this.speedY = 0;
     }
 
     // vertical boundaries

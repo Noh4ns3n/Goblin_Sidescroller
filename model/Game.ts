@@ -49,8 +49,6 @@ export class Game {
     this.context2 = context2;
     this.height = CANVAS_HEIGHT;
     this.width = CANVAS_WIDTH;
-    this.music = new Audio("assets/audio/background/ambient_forest.mp3");
-    this.musicStarted = false;
     this.lastTime = 0;
     this.deltaTime = 0;
     this.enemyIntervalReduction = 0;
@@ -64,15 +62,12 @@ export class Game {
     this.gameOver = false;
     this.victory = false;
     this.spanScore = document.getElementById("spanScore");
-    this.input = new InputHandler(this);
-    this.background = new Background();
-    this.player = new Player(this);
     this.heartImages = this.prepareHUDImages("heart");
     this.framerate = 200;
     this.lastFrame = 0;
-    this.playerLastHealth = this.player.startingHealthpoints;
     this.lastScore = 0;
-
+    this.musicStarted = false;
+    this.music = new Audio("assets/audio/background/ambient_forest.mp3");
     this.boarDeathSounds = [
       new Audio("assets/audio/boar/boar_grunt1.mp3"),
       new Audio("assets/audio/boar/boar_grunt2.mp3"),
@@ -84,6 +79,10 @@ export class Game {
       new Audio("assets/audio/boar/boar_death3.mp3"),
       new Audio("assets/audio/boar/boar_death4.mp3"),
     ];
+    this.input = new InputHandler(this);
+    this.background = new Background();
+    this.player = new Player(this);
+    this.playerLastHealth = this.player.startingHealthpoints;
   }
 
   playMusic() {
