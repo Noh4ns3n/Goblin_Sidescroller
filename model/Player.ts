@@ -82,7 +82,7 @@ export class Player {
     this.speedXAirModifier = 5;
     this.traveledX = 0;
     this.speedY = 0;
-    this.jumpCooldown = 400;
+    this.jumpCooldown = 500;
     this.lastJump = this.jumpCooldown;
     this.weight = 1.2;
     this.sourceWidth = 66; // width of each sprite on spritesheet

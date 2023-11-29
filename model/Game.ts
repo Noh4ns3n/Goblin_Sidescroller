@@ -34,6 +34,7 @@ export class Game {
   gameOver: boolean;
   victory: boolean;
   spanScore: HTMLSpanElement;
+  boarDeathSounds: HTMLAudioElement[];
   heartImages: HTMLImageElement[];
   framerate: number;
   lastFrame: number;
@@ -71,6 +72,18 @@ export class Game {
     this.lastFrame = 0;
     this.playerLastHealth = this.player.startingHealthpoints;
     this.lastScore = 0;
+
+    this.boarDeathSounds = [
+      new Audio("assets/audio/boar/boar_grunt1.mp3"),
+      new Audio("assets/audio/boar/boar_grunt2.mp3"),
+      new Audio("assets/audio/boar/boar_grunt3.mp3"),
+      new Audio("assets/audio/boar/boar_grunt4.mp3"),
+      new Audio("assets/audio/boar/boar_grunt5.mp3"),
+      new Audio("assets/audio/boar/boar_death1.mp3"),
+      new Audio("assets/audio/boar/boar_death2.mp3"),
+      new Audio("assets/audio/boar/boar_death3.mp3"),
+      new Audio("assets/audio/boar/boar_death4.mp3"),
+    ];
   }
 
   playMusic() {
@@ -221,8 +234,6 @@ export class Game {
   }
 
   animate = (timeStamp: number) => {
-
-    console.log(this.enemyInterval);
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
@@ -252,8 +263,8 @@ export class Game {
       this.debug
         ? "</br> FPS : " +
           Math.floor(1000 / this.deltaTime) +
-          " maxUpdate/s : " +
-          this.framerate
+          " State : " +
+          this.player.currentState.state
         : ""
     }`;
   }

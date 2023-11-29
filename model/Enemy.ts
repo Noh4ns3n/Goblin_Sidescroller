@@ -45,7 +45,6 @@ export class Enemy {
   markedForDeletion: boolean;
   animation: Animations;
   facing: Facings;
-  sounds: HTMLAudioElement[];
   hasGrunted: boolean;
   deathSounds: HTMLAudioElement[];
   images: AnimationSide | null;
@@ -78,25 +77,7 @@ export class Enemy {
     this.animation = "running";
     this.facing = "L";
     this.hasGrunted = false;
-    this.sounds = [
-      new Audio("assets/audio/boar/boar_grunt1.mp3"),
-      new Audio("assets/audio/boar/boar_grunt2.mp3"),
-      new Audio("assets/audio/boar/boar_grunt3.mp3"),
-      new Audio("assets/audio/boar/boar_grunt4.mp3"),
-      new Audio("assets/audio/boar/boar_grunt5.mp3"),
-    ];
-
-    this.deathSounds = [
-      new Audio("assets/audio/boar/boar_grunt1.mp3"),
-      new Audio("assets/audio/boar/boar_grunt2.mp3"),
-      new Audio("assets/audio/boar/boar_grunt3.mp3"),
-      new Audio("assets/audio/boar/boar_grunt4.mp3"),
-      new Audio("assets/audio/boar/boar_grunt5.mp3"),
-      new Audio("assets/audio/boar/boar_death1.mp3"),
-      new Audio("assets/audio/boar/boar_death2.mp3"),
-      new Audio("assets/audio/boar/boar_death3.mp3"),
-      new Audio("assets/audio/boar/boar_death4.mp3"),
-    ];
+    this.deathSounds = this.game.boarDeathSounds;
 
     this.images = {
       still: {
@@ -254,7 +235,7 @@ export class Enemy {
     if (this.game.player.x !== this.game.player.rightLimit && this.x != this.game.width) {
       this.x -= this.speedX * this.game.speed * (this.game.deltaTime/6);
     } else {
-      this.x -= (this.speedX + this.game.player.speedX) * this.game.speed * (this.game.deltaTime/6);
+      this.x -= (this.speedX + this.game.player.speedX)  * this.game.speed  * (this.game.deltaTime/8);
     }
     this.checkForDeletion();
     this.checkForCoward();

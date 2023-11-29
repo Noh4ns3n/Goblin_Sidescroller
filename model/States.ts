@@ -64,12 +64,21 @@ class Running extends State {
       this.game.player.speedX =
         -this.game.player.speedXModifier * this.game.speed;
     }
+   
     if (
       input.keys.includes("ArrowUp") &&
       this.game.player.lastJump > this.game.player.jumpCooldown
     )
       this.game.player.setState(STATES.JUMPING);
-    if (this.game.player.speedX === 0) this.game.player.setState(STATES.STILL);
+      
+      if (
+        (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
+        this.game.player.lastAttack <= this.game.deltaTime
+      ) {
+        this.game.player.setState(STATES.ATTACKING);
+      }
+
+    if (this.game.player.speedX === 0 && this.game.player.currentState.state !== "attacking") this.game.player.setState(STATES.STILL);
   }
 }
 
@@ -89,6 +98,7 @@ class Jumping extends State {
     if (this.game.player.speedY > this.game.player.weight) {
       this.game.player.setState(STATES.FALLING);
     }
+    
     if (input.keys.includes("ArrowRight")) {
       this.game.player.facing = "R";
       this.game.player.speedX =
@@ -97,6 +107,13 @@ class Jumping extends State {
       this.game.player.facing = "L";
       this.game.player.speedX =
         -this.game.player.speedXAirModifier * this.game.speed;
+    }
+   
+    if (
+      (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
+      this.game.player.lastAttack <= this.game.deltaTime
+    ) {
+      this.game.player.setState(STATES.ATTACKING);
     }
   }
 }
@@ -119,7 +136,13 @@ class Falling extends State {
       this.game.player.speedX =
         -this.game.player.speedXAirModifier * this.game.speed;
     }
-    if (this.game.player.onGround()) {
+    if (
+      (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
+      this.game.player.lastAttack <= this.game.deltaTime
+    ) {
+      this.game.player.setState(STATES.ATTACKING);
+    }
+    if (this.game.player.onGround() && this.game.player.currentState.state !== "attacking") {
       this.game.player.setState(STATES.STILL);
     }
   }
