@@ -252,9 +252,9 @@ export class Enemy {
 
     // horizontal movement
     if (this.game.player.x !== this.game.player.rightLimit && this.x != this.game.width) {
-      this.x -= this.speedX * this.game.speed;
+      this.x -= this.speedX * this.game.speed * (this.game.deltaTime/6);
     } else {
-      this.x -= (this.speedX + this.game.player.speedX) * this.game.speed;
+      this.x -= (this.speedX + this.game.player.speedX) * this.game.speed * (this.game.deltaTime/6);
     }
     this.checkForDeletion();
     this.checkForCoward();

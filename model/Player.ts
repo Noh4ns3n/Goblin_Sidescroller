@@ -58,8 +58,8 @@ export class Player {
   lastAttack: number;
   attackCooldown: number;
   attackDuration: number;
-    attackIndicated: boolean;
-    soundAxeReady: HTMLAudioElement;
+  attackIndicated: boolean;
+  soundAxeReady: HTMLAudioElement;
   soundAxeHit: HTMLAudioElement;
 
   constructor(game: Game) {
@@ -105,25 +105,24 @@ export class Player {
     this.soundAxeReady = new Audio("assets/audio/axe/axe_unsheath.mp3");
     this.soundAxeHit = new Audio("assets/audio/axe/axe_hit.mp3");
     this.attackIndicated = true;
-      this.images =
-        {
-          alerted: {
-            L: null,
-            R: null,
-          },
-          attacking: {
-            L: null,
-            R: null,
-          },
-          running: {
-            L: null,
-            R: null,
-          },
-          still: {
-            L: null,
-            R: null,
-          },
-        };
+    this.images = {
+      alerted: {
+        L: null,
+        R: null,
+      },
+      attacking: {
+        L: null,
+        R: null,
+      },
+      running: {
+        L: null,
+        R: null,
+      },
+      still: {
+        L: null,
+        R: null,
+      },
+    };
 
     this.images.alerted.L = new Image(60, 45);
     this.images.alerted.L.src =
@@ -202,7 +201,7 @@ export class Player {
 
   update(input: InputHandler, deltaTime: number) {
     this.lastAttack -= deltaTime;
-    if(!this.attackIndicated && this.lastAttack <= this.game.deltaTime) {
+    if (!this.attackIndicated && this.lastAttack <= this.game.deltaTime) {
       this.soundAxeReady.play();
       this.attackIndicated = true;
     }
@@ -226,17 +225,19 @@ export class Player {
     }
 
     this.checkCollision();
-    this.x += this.speedX;
+    this.x += this.speedX * (this.game.deltaTime / 8);
     this.traveledX += this.speedX;
     this.currentState.handleInput(input);
 
     // horizontal boundaries
     if (this.x < this.leftLimit) {
       this.x = this.leftLimit;
-      this.game.background.speedX = -this.speedX * this.game.speed;
+      this.game.background.speedX =
+        -(this.speedX * this.game.speed) * (this.game.deltaTime / 10);
     } else if (this.x > this.rightLimit) {
       this.x = this.rightLimit;
-      this.game.background.speedX = -this.speedX * this.game.speed;
+      this.game.background.speedX =
+        -this.speedX * this.game.speed * (this.game.deltaTime / 10);
     } else {
       this.game.background.speedX = 0;
     }
@@ -249,10 +250,10 @@ export class Player {
       this.speedY -= 20;
       this.lastJump = 0;
     }
-    this.y += this.speedY;
+    this.y += this.speedY * (this.game.deltaTime / 10);
 
     if (!this.onGround()) {
-      this.speedY += this.weight;
+      this.speedY += this.weight * (this.game.deltaTime / 10);
     } else {
       this.speedY = 0;
     }
