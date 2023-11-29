@@ -15,6 +15,8 @@ export class Game {
   input: InputHandler;
   background: Background;
   player: Player;
+  music: HTMLAudioElement;
+  musicStarted: boolean;
   height: number;
   width: number;
   lastTime: number;
@@ -36,7 +38,7 @@ export class Game {
   framerate: number;
   lastFrame: number;
   playerLastHealth: number;
-  lastScore:number;
+  lastScore: number;
 
   constructor(
     context: CanvasRenderingContext2D,
@@ -46,6 +48,8 @@ export class Game {
     this.context2 = context2;
     this.height = CANVAS_HEIGHT;
     this.width = CANVAS_WIDTH;
+    this.music = new Audio("assets/audio/background/ambient_forest.mp3");
+    this.musicStarted = false;
     this.lastTime = 0;
     this.deltaTime = 0;
     this.enemyIntervalReduction = 0;
@@ -67,7 +71,18 @@ export class Game {
     this.lastFrame = 0;
     this.playerLastHealth = this.player.startingHealthpoints;
     this.lastScore = 0;
+  }
 
+  playMusic() {
+    this.music.play();
+    this.music.addEventListener(
+      "ended",
+      function () {
+        this.currentTime = 0;
+        this.play();
+      },
+      false
+    );
   }
 
   prepareHUDImages(keyword: string): HTMLImageElement[] {
@@ -123,8 +138,13 @@ export class Game {
   }
 
   displayHearts() {
-    const updateHearts : boolean = this.playerLastHealth !== this.player.healthpoints;
-    if (updateHearts || this.player.healthpoints === 0 || this.lastTime < 1000) {
+    const updateHearts: boolean =
+      this.playerLastHealth !== this.player.healthpoints;
+    if (
+      updateHearts ||
+      this.player.healthpoints === 0 ||
+      this.lastTime < 1000
+    ) {
       this.playerLastHealth = this.player.healthpoints;
       this.context2.clearRect(0, 0, CANVAS2_WIDTH, CANVAS2_HEIGHT);
       let fullHearts: number = Math.floor(this.player.healthpoints / 2);
@@ -173,12 +193,12 @@ export class Game {
   }
 
   reduceEnemyInterval() {
-    if(this.score > this.lastScore + 20) {
+    if (this.score > this.lastScore + 5) {
       this.lastScore = this.score;
       // this.enemyIntervalReduction = Math.floor(this.score / 20) * 10;
       // this.enemyInterval = this.enemyInterval * (1 - this.enemyIntervalReduction / 100);
       this.enemyInterval *= 0.9;
-      console.log('this.enemyInterval :>> ', this.enemyInterval);
+      console.log("this.enemyInterval :>> ", this.enemyInterval);
     }
   }
 
@@ -201,9 +221,15 @@ export class Game {
   }
 
   animate = (timeStamp: number) => {
+
+    console.log(this.enemyInterval);
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
+    if (this.score > 0 && !this.musicStarted) {
+      this.playMusic();
+      this.musicStarted = true;
+    }
     if (this.lastFrame > 1000 / this.framerate) {
       this.context.clearRect(0, 0, this.width, this.height);
       this.background.draw(this.context);
@@ -218,6 +244,7 @@ export class Game {
     if (this.gameOver) {
       this.handleVictory();
     } else requestAnimationFrame(this.animate);
+
   };
 
   displayStatusText() {

@@ -52,7 +52,6 @@ export class Enemy {
 
   constructor(game: Game) {
     this.game = game;
-    this.image = document.getElementById("imgBoar") as HTMLImageElement;
     this.width = 60; // displayed width
     this.height = 60; // displayed height
     this.x = this.game.width;
@@ -74,7 +73,7 @@ export class Enemy {
     this.frameTimer = 0;
     this.hitboxRadius = this.width / 2.35;
     this.hitboxXOffset = 2;
-    this.hitboxYOffset = 2;
+    this.hitboxYOffset = 1.6;
     this.markedForDeletion = false;
     this.animation = "running";
     this.facing = "L";
@@ -88,7 +87,7 @@ export class Enemy {
     ];
 
     this.deathSounds = [
-      // new Audio("assets/audio/boar/boar_grunt1.mp3"),
+      new Audio("assets/audio/boar/boar_grunt1.mp3"),
       new Audio("assets/audio/boar/boar_grunt2.mp3"),
       new Audio("assets/audio/boar/boar_grunt3.mp3"),
       new Audio("assets/audio/boar/boar_grunt4.mp3"),
@@ -204,9 +203,8 @@ export class Enemy {
     if (!this.hasGrunted) {
       this.hasGrunted = true;
       const sound = Math.floor(Math.random() * this.deathSounds.length);
-      if(Math.random() * 2 > 1) {
+      console.log("sound :>> ", sound);
       this.deathSounds[sound].play();
-      }
     }
   }
 
@@ -223,6 +221,7 @@ export class Enemy {
     if (this.x < 0 - this.width) {
       this.markedForDeletion = true;
       this.game.score++;
+      this.game.player.checkGainLife();
     }
   }
 
@@ -252,7 +251,59 @@ export class Enemy {
     }
 
     // horizontal movement
-    this.x -= this.speedX * this.game.speed;
+    if (this.game.player.x !== this.game.player.rightLimit && this.x != this.game.width) {
+      this.x -= this.speedX * this.game.speed;
+    } else {
+      this.x -= (this.speedX + this.game.player.speedX) * this.game.speed;
+    }
+    this.checkForDeletion();
+    this.checkForCoward();
+  }
+}
+
+export class RedBoar extends Enemy {
+  constructor(game: Game) {
+    super(game);
+    this.speedX = 3;
+  }
+
+  checkForDeletion() {
+    this.game.reduceEnemyInterval();
+    if (this.x < 0 - this.width) {
+      this.markedForDeletion = true;
+      this.game.score++;
+    }
+  }
+
+  update(deltaTime: number) {
+    if (this.frameTimer > 1000 / this.fps) {
+      // if reached end of spritesheet, repositions to start of spritesheet
+      if (this.frame === this.maxFrameRow * this.maxFrameCol - 1) {
+        this.frame = 0;
+      } else {
+        this.frame++;
+      }
+      this.frameTimer = 0;
+      // cycle through spritesheet rows/columns
+      this.frameCol = this.frame % this.maxFrameCol;
+      this.frameRow = Math.floor(this.frame / this.maxFrameCol);
+    } else {
+      this.frameTimer += deltaTime;
+    }
+
+    if (this.hurt) {
+      this.hurtTimer += this.game.deltaTime;
+      if (this.hurtTimer >= this.deathTimer) {
+        this.markedForDeletion = true;
+      }
+    }
+
+    // horizontal movement
+    if (this.game.player.x !== this.game.player.rightLimit) {
+      this.x -= this.speedX * this.game.speed;
+    } else {
+      this.x -= (this.speedX + this.game.player.speedX) * this.game.speed;
+    }
     this.checkForDeletion();
     this.checkForCoward();
   }

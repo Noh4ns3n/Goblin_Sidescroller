@@ -1,6 +1,4 @@
 // WIP : add vertical movement to jumping state --- ??? why is velocity increased twice ???
-// add possibility to change animation for a specified duration (ex: enemy turning)
-// add jump cooldown for player
 // add sound
 // Game is being sent everywhere + I don't want more than one instance -> make it a Singleton
 

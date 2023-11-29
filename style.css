@@ -33,6 +33,8 @@ body {
     text-align:center;  
     font-family: silkscreen;
     font-size: 40px;
+    margin-block-start: 20px;
+    margin-block-end: 0px;
 }
 
 #pVictory2 {

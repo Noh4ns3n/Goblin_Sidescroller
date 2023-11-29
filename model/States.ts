@@ -39,9 +39,8 @@ class Still extends State {
     }
     if (
       input.keys.includes("a") &&
-      this.game.player.lastAttack > this.game.player.attackCooldown
+      this.game.player.lastAttack <= this.game.deltaTime
     ) {
-      this.game.player.lastAttack = 0;
       this.game.player.setState(STATES.ATTACKING);
     }
   }
@@ -129,6 +128,7 @@ class Falling extends State {
 class Attacking extends State {
   game: Game;
   attackTimer: number;
+ 
   constructor(game: Game) {
     super("ATTACKING");
     this.game = game;
@@ -136,10 +136,14 @@ class Attacking extends State {
   enter() {
     this.game.player.frame = 0;
     this.game.player.animation = "attacking";
+    this.game.player.lastAttack = this.game.player.attackCooldown;
+    this.game.player.attackIndicated = false;
+    this.game.player.soundAxeHit.play();
     this.attackTimer = this.game.player.attackDuration;
   }
   handleInput(input: InputHandler) {
     this.attackTimer -= this.game.deltaTime;
+    
     if (input.keys.includes("ArrowRight")) {
       this.game.player.facing = "R";
       this.game.player.speedX =

@@ -15,8 +15,17 @@ type AnimationSide = {
 };
 
 export class Player {
+  
+  blast: HTMLImageElement;
+  maxFrameCol: number;
+  maxFrameRow: number;
+  frame: number;
+  frameCol: number;
+  frameRow: number;
+
   facing: Facings;
   animation: Animations;
+  readyToGainLife: boolean;
   healthpoints: number;
   startingHealthpoints: number;
   width: number;
@@ -57,6 +66,9 @@ export class Player {
   lastAttack: number;
   attackCooldown: number;
   attackDuration: number;
+    attackIndicated: boolean;
+    soundAxeReady: HTMLAudioElement;
+  soundAxeHit: HTMLAudioElement;
 
   constructor(game: Game) {
     this.game = game;
@@ -64,13 +76,14 @@ export class Player {
     this.animation = "still";
     this.startingHealthpoints = 6;
     this.healthpoints = this.startingHealthpoints;
+    this.readyToGainLife = true;
     this.width = 66; // displayed width
     this.height = 61; // displayed height
-    this.leftLimit = 0;
-    this.rightLimit = this.game.width - this.width;
+    this.leftLimit = this.game.width / 5;
+    this.rightLimit = this.game.width - this.game.width / 5 - this.width;
     this.yOffset = -22; // account for character position offset on spritesheet
     this.groundLimit = this.game.height - this.height + this.yOffset;
-    this.x = this.game.width/2 - this.width/2;
+    this.x = this.game.width / 3 - this.width / 2;
     this.y = this.groundLimit;
     this.speedX = 0;
     this.speedXModifier = 3;
@@ -94,28 +107,33 @@ export class Player {
     this.hitboxYOffset = 1.8;
     this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
     this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
+    this.attackCooldown = 1500;
     this.lastAttack = 0;
-    this.attackCooldown = 1000;
     this.attackDuration = 500;
-
-    this.images = {
-      alerted: {
-        L: null,
-        R: null,
-      },
-      attacking: {
-        L: null,
-        R: null,
-      },
-      running: {
-        L: null,
-        R: null,
-      },
-      still: {
-        L: null,
-        R: null,
-      },
-    };
+    this.soundAxeReady = new Audio("assets/audio/axe/axe_unsheath.mp3");
+    this.soundAxeHit = new Audio("assets/audio/axe/axe_hit.mp3");
+    this.blast = new Image(60,40);
+    this.blast.src = "assets/img/fx/blast_fx.png";
+    this.attackIndicated = true;
+      this.images =
+        {
+          alerted: {
+            L: null,
+            R: null,
+          },
+          attacking: {
+            L: null,
+            R: null,
+          },
+          running: {
+            L: null,
+            R: null,
+          },
+          still: {
+            L: null,
+            R: null,
+          },
+        };
 
     this.images.alerted.L = new Image(60, 45);
     this.images.alerted.L.src =
@@ -171,6 +189,13 @@ export class Player {
         Math.PI * 2
       );
       context.stroke();
+
+      context.beginPath();
+      context.moveTo(this.rightLimit + 48, 0);
+      context.lineTo(this.rightLimit + 48, this.game.height);
+      context.moveTo(this.leftLimit + 15, 0);
+      context.lineTo(this.leftLimit + 15, this.game.height);
+      context.stroke();
     }
     context.drawImage(
       this.images[this.animation][this.facing],
@@ -183,11 +208,29 @@ export class Player {
       this.width,
       this.height
     );
+
+    context.drawImage(
+      this.blast,
+      this.frameCol * this.sourceWidth, // sx
+      this.frameRow * this.sourceHeight, // sy
+      this.width, // sw
+      this.height, // sh
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
   }
 
   update(input: InputHandler, deltaTime: number) {
-    this.lastAttack += deltaTime;
+    this.lastAttack -= deltaTime;
+    if(!this.attackIndicated && this.lastAttack <= this.game.deltaTime) {
+      this.soundAxeReady.play();
+      this.attackIndicated = true;
+    }
+
     this.lastJump += deltaTime;
+
     if (this.healthpoints === 0) this.game.gameOver = true;
     if (this.game.debug) {
       console.log("this.currentState :>> ", this.currentState);
@@ -211,10 +254,10 @@ export class Player {
 
     // horizontal boundaries
     if (this.x < this.leftLimit) {
-      this.x = 0;
+      this.x = this.leftLimit;
       this.game.background.speedX = -this.speedX * this.game.speed;
     } else if (this.x > this.rightLimit) {
-      this.x = this.game.width - this.width;
+      this.x = this.rightLimit;
       this.game.background.speedX = -this.speedX * this.game.speed;
     } else {
       this.game.background.speedX = 0;
@@ -257,6 +300,23 @@ export class Player {
     }
   }
 
+  checkGainLife() {
+    if (
+      this.readyToGainLife &&
+      this.game.score >= 10 &&
+      (this.game.score % 10 === 0 || this.game.score % 10 === 1)
+    ) {
+      this.healthpoints++;
+      this.readyToGainLife = false;
+      if (this.healthpoints > this.startingHealthpoints) {
+        this.startingHealthpoints = this.healthpoints;
+      }
+      this.game.displayHearts();
+    } else {
+      this.readyToGainLife = true;
+    }
+  }
+
   setState(state: number) {
     this.currentState = this.states[state];
     this.currentState.enter();
@@ -288,16 +348,18 @@ export class Player {
           this.speedY = -15;
           this.game.displayHearts();
         } else if (this.currentState === this.states[STATES.ATTACKING]) {
-          if(!enemy.hurt) this.game.score += 2;
+          if (!enemy.hurt) {
+            this.game.score += 2;
+            this.checkGainLife();
+          }
+
           enemy.hurt = true;
           enemy.frame = 0;
           enemy.animation = "dying";
-          // if(Math.random() * 1000 > 990) {
-            enemy.playSound();
-          // }
-          
+          enemy.playSound();
+
           while (enemy.speedX > enemy.weight) {
-            enemy.speedX -= (enemy.weight*0.9);
+            enemy.speedX -= enemy.weight * 0.9;
           }
         }
       }
