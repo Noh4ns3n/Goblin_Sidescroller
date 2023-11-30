@@ -3,7 +3,15 @@ import { Background } from "./Background";
 import { Enemy } from "./Enemy";
 import { Game } from "./Game";
 import { InputHandler } from "./InputHandler";
-import { State, Running, Jumping, Falling, Still, Attacking } from "./States";
+import {
+  State,
+  Running,
+  Jumping,
+  Falling,
+  Still,
+  Attacking,
+  Preparing,
+} from "./States";
 
 type Animations = "alerted" | "still" | "running" | "attacking";
 type Facings = "L" | "R";
@@ -67,7 +75,7 @@ export class Player {
     this.game = game;
     this.facing = "R"; // R = right, L = left
     this.animation = "still";
-    this.startingHealthpoints = 6;
+    this.startingHealthpoints = 1;
     this.healthpoints = this.startingHealthpoints;
     this.readyToGainLife = true;
     this.width = 66; // displayed width
@@ -163,9 +171,10 @@ export class Player {
       new Jumping(this.game),
       new Falling(this.game),
       new Attacking(this.game),
+      new Preparing(this.game),
     ];
-    this.currentState = this.states[0];
-    this.specialStates = ["JUMPING", "ATTACKING", "FALLING"];
+    this.currentState = this.states[STATES.PREPARING];
+    this.specialStates = ["JUMPING", "ATTACKING", "FALLING", "PREPARING"];
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -205,12 +214,12 @@ export class Player {
     // ----- MOVEMENT
     // horizontal movement
     if (input.keys.includes("ArrowRight")) {
-      if(this.onGround()) this.game.player.setState(STATES.RUNNING);
+      if (this.onGround()) this.game.player.setState(STATES.RUNNING);
       this.game.player.facing = "R";
       this.game.player.speedX =
         this.game.player.speedXModifier * this.game.speed;
     } else if (input.keys.includes("ArrowLeft")) {
-      if(this.onGround()) this.game.player.setState(STATES.RUNNING);
+      if (this.onGround()) this.game.player.setState(STATES.RUNNING);
       this.game.player.facing = "L";
       this.game.player.speedX =
         -this.game.player.speedXModifier * this.game.speed;
@@ -228,10 +237,10 @@ export class Player {
       this.lastJump = 0;
       this.speedY -= 20;
     }
-    
+
     this.x += this.speedX * (this.game.deltaTime / 8);
     this.y += this.speedY * (this.game.deltaTime / 10);
-    
+
     if (!this.onGround()) {
       this.speedY += this.weight * (this.game.deltaTime / 10);
     } else {
@@ -239,10 +248,7 @@ export class Player {
     }
 
     // ----- STATES
-    if (
-      this.currentState.state === "JUMPING" &&
-      this.speedY > this.weight
-    ) {
+    if (this.currentState.state === "JUMPING" && this.speedY > this.weight) {
       this.setState(STATES.FALLING);
     }
 
@@ -262,33 +268,7 @@ export class Player {
     }
   }
 
-  update(input: InputHandler, deltaTime: number) {
-
-    this.lastAttack -= deltaTime;
-    this.lastJump += deltaTime;
-
-    if (!this.attackIndicated && this.lastAttack - 200 <= this.game.deltaTime) {
-      this.soundAxeReady.play();
-      this.attackIndicated = true;
-    }
-
-    if (this.game.debug) {
-      console.log("this.currentState :>> ", this.currentState);
-      console.log("this.speedX :>> ", this.speedX);
-      console.log("this.speedY :>> ", this.speedY);
-    }
-
-    this.checkCollision();
-
-    this.traveledX += this.speedX;
-
-    // if not in special state (attacking, jumping), using generic inputs from player
-    if (this.specialStates.includes(this.currentState.state)) {
-      this.currentState.handleInput(input);
-    } else {
-      this.handleInput(input);
-    }
-
+  checkBoundaries() {
     // horizontal boundaries
     if (this.x < this.leftLimit) {
       this.x = this.leftLimit;
@@ -304,7 +284,9 @@ export class Player {
 
     // vertical boundaries
     if (this.y > this.groundLimit) this.y = this.groundLimit;
+  }
 
+  animateSpritesheet(deltaTime: number) {
     // ----- ANIMATION
     // update player frame only when above fps interval
     if (this.frameTimer > 1000 / this.fps) {
@@ -321,6 +303,36 @@ export class Player {
     } else {
       this.frameTimer += deltaTime;
     }
+  }
+
+  update(input: InputHandler, deltaTime: number) {
+    if (this.game.debug) {
+      console.log("this.currentState :>> ", this.currentState);
+      console.log("this.speedX :>> ", this.speedX);
+      console.log("this.speedY :>> ", this.speedY);
+      console.log("this.traveledX :>> ", this.traveledX);
+    }
+
+    this.lastAttack -= deltaTime;
+    this.lastJump += deltaTime;
+    this.traveledX += this.speedX;
+
+    // if not in special state (attacking, jumping), using generic inputs from player
+    if (this.specialStates.includes(this.currentState.state)) {
+      this.currentState.handleInput(input);
+    } else {
+      this.handleInput(input);
+    }
+
+    if (!this.attackIndicated && this.lastAttack - 200 <= this.game.deltaTime) {
+      this.soundAxeReady.play();
+      this.attackIndicated = true;
+    }
+
+    this.checkCollision();
+    this.checkBoundaries();
+    this.animateSpritesheet(deltaTime);
+    if(this.healthpoints <= 0 && this.game.gameStarted) this.game.gameOver = true;
   }
 
   checkGainLife() {

@@ -17,5 +17,5 @@ window.addEventListener("load", function () {
   canvas2.width = CANVAS2_WIDTH;
   canvas2.height = CANVAS2_HEIGHT;
   const game = new Game(ctx, ctx2);
-  game.animate(0);
+  game.animatePreparation(0);
 });

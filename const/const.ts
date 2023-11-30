@@ -8,6 +8,7 @@ const STATES = {
   JUMPING: 2,
   FALLING: 3,
   ATTACKING: 4,
+  PREPARING: 5
 };
 const IMG_HEARTS = {
   FULL: 0,

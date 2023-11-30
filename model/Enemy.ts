@@ -60,7 +60,7 @@ export class Enemy {
     this.weight = 0.2;
     this.hurt = false;
     this.hurtTimer = 0;
-    this.deathTimer = 850;
+    this.deathTimer = 700;
     this.maxFrameCol = 4; // number of columns on spritesheet
     this.maxFrameRow = 2; // number or rows on spritesheet
     this.sourceWidth = 124; // width of each sprite on spritesheet
@@ -232,10 +232,16 @@ export class Enemy {
     }
 
     // horizontal movement
-    if (this.game.player.x !== this.game.player.rightLimit && this.x != this.game.width) {
-      this.x -= this.speedX * this.game.speed * (this.game.deltaTime/6);
+    if (
+      this.game.player.x === this.game.player.rightLimit &&
+      this.game.player.speedX !== 0
+    ) {
+      this.x -=
+        (this.speedX + this.game.player.speedX) *
+        this.game.speed *
+        (this.game.deltaTime / 8);
     } else {
-      this.x -= (this.speedX + this.game.player.speedX)  * this.game.speed  * (this.game.deltaTime/8);
+      this.x -= this.speedX * this.game.speed * (this.game.deltaTime / 6);
     }
     this.checkForDeletion();
     this.checkForCoward();

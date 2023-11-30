@@ -192,4 +192,99 @@ class Attacking extends State {
   }
 }
 
-export { State, Still, Running, Jumping, Falling, Attacking };
+class Preparing extends State {
+  game: Game;
+  attackTimer: number;
+  constructor(game: Game) {
+    super("PREPARING");
+    this.game = game;
+  }
+  enter() {
+    this.game.player.animation = "still";
+    // if(this.game.gameOver === true) {
+    //   this.game.gameStarted = false;
+    //   this.game.score = 0;
+    //   this.game.enemies = [];
+    //   this.game.player.startingHealthpoints = 6;
+    //   this.game.player.healthpoints = this.game.player.startingHealthpoints;
+    //   this.game.grayscaleCanvas();
+    // }
+  }
+  handleInput(input: InputHandler) {
+    this.attackTimer -= this.game.deltaTime;
+    
+    // special state before game starts
+    if (input.keys.includes("r")) {
+      if(this.game.gameOver === true) {
+        this.game.resetGame();
+        this.game.gameStarted = false;
+        this.game.gameOver = false;
+        this.game.animatePreparation(0);
+      }
+      this.game.context.clearRect(0, 0, this.game.width, this.game.height);
+      this.game.gameStarted = true;
+      this.game.player.setState(STATES.STILL);
+    }
+
+    // horizontal movement (speedXAirModifier)
+    if (input.keys.includes("ArrowRight")) {
+      this.game.player.facing = "R";
+      this.game.player.animation = "running";
+      this.game.player.speedX =
+        this.game.player.speedXModifier * this.game.speed;
+    } else if (input.keys.includes("ArrowLeft")) {
+      this.game.player.facing = "L";
+      this.game.player.animation = "running";
+      this.game.player.speedX =
+        -this.game.player.speedXModifier * this.game.speed;
+    } else {
+      this.game.player.speedX = 0;
+    }
+
+    // jump
+    if (
+      input.keys.includes("ArrowUp") &&
+      this.game.player.lastJump > this.game.player.jumpCooldown
+    ) {
+      this.game.player.lastJump = 0;
+      this.game.player.speedY -= 20;
+    }
+
+     // update position
+     this.game.player.x += this.game.player.speedX * (this.game.deltaTime / 8);
+     this.game.player.y += this.game.player.speedY * (this.game.deltaTime / 10);
+
+    if (!this.game.player.onGround()) {
+      this.game.player.speedY +=
+        this.game.player.weight * (this.game.deltaTime / 10);
+    } else {
+      this.game.player.speedY = 0;
+    }
+
+    // attack
+    if (
+      (input.keys.includes("a") || input.keys.includes("ArrowDown")) &&
+      this.game.player.lastAttack <= this.game.deltaTime &&
+      this.game.player.animation !== "attacking"
+    ) {
+      this.game.player.frame = 0;
+      this.game.player.animation = "attacking";
+      this.attackTimer = this.game.player.attackDuration;
+    }
+    if(this.attackTimer <= this.game.deltaTime) this.game.player.animation = "still";
+
+   
+
+    if (
+      this.game.player.speedX === 0 &&
+      this.game.player.animation !== "attacking"
+    ) {
+      this.game.player.animation = "still";
+    }
+
+
+   
+  }
+}
+
+export { State, Still, Running, Jumping, Falling, Attacking, Preparing };
