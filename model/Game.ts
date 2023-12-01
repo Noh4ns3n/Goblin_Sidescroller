@@ -91,9 +91,7 @@ export class Game {
   resetGame() {
     this.context.clearRect(0, 0, this.width, this.height);
     this.enemies = [];
-    this.input = new InputHandler(this);
-    this.background = new Background();
-
+    
     this.player.healthpoints = 6;
     this.player.x = this.player.game.width / 3 - this.player.width / 2;
     this.player.y = this.player.groundLimit;
@@ -108,6 +106,10 @@ export class Game {
     this.gameStarted = false;
     this.enemyInterval = 1000;
     this.score = 0;
+    this.lastScore = 0;
+    this.input = new InputHandler(this);
+    this.background = new Background();
+    this.debug=false;
     this.animatePreparation(0);
   }
 
@@ -399,6 +401,7 @@ export class Game {
     if (!this.gameStarted) {
       requestAnimationFrame(this.animatePreparation);
     } else {
+      this.player.healthpoints = 6;
       this.animate(0);
     }
   };
@@ -409,6 +412,7 @@ export class Game {
     this.lastFrame += this.deltaTime;
 
     if (this.debug) {
+      console.log('this.player :>> ', this.player);
       console.log("this.randomEnemyInterval :>> ", this.randomEnemyInterval);
       console.log("this.enemyInterval :>> ", this.enemyInterval);
     }
