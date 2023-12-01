@@ -179,7 +179,7 @@ export class Enemy {
     this.game.reduceEnemyInterval();
     if (this.x < 0 - this.width) {
       this.markedForDeletion = true;
-      this.game.score++;
+      this.game.score+=2;
       this.game.player.checkGainLife();
     }
   }

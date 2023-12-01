@@ -108,7 +108,7 @@ export class Player {
     this.hitboxYOffset = 1.8;
     this.hitboxXCenter = this.x + this.width / this.hitboxXOffset;
     this.hitboxYCenter = this.y + this.height / this.hitboxYOffset;
-    this.attackCooldown = 1500;
+    this.attackCooldown = 2000;
     this.lastAttack = 0;
     this.attackDuration = 500;
     this.soundAxeReady = new Audio("assets/audio/axe/axe_unsheath.mp3");
@@ -175,6 +175,36 @@ export class Player {
     ];
     this.currentState = this.states[STATES.PREPARING];
     this.specialStates = ["JUMPING", "ATTACKING", "FALLING", "PREPARING"];
+  }
+
+  update(input: InputHandler, deltaTime: number) {
+    if (this.game.debug) {
+      console.log("this.currentState :>> ", this.currentState);
+      console.log("this.speedX :>> ", this.speedX);
+      console.log("this.speedY :>> ", this.speedY);
+      console.log("this.traveledX :>> ", this.traveledX);
+    }
+
+    this.lastAttack -= deltaTime;
+    this.lastJump += deltaTime;
+    this.traveledX += this.speedX;
+
+    // if not in special state (attacking, jumping), using generic inputs from player
+    if (this.specialStates.includes(this.currentState.state)) {
+      this.currentState.handleInput(input);
+    } else {
+      this.handleInput(input);
+    }
+
+    if (!this.attackIndicated && this.lastAttack - 200 <= this.game.deltaTime) {
+      this.soundAxeReady.play();
+      this.attackIndicated = true;
+    }
+
+    this.checkCollision();
+    this.checkBoundaries();
+    this.animateSpritesheet(deltaTime);
+    if(this.healthpoints <= 0 && this.game.gameStarted) this.game.gameOver = true;
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -305,36 +335,6 @@ export class Player {
     }
   }
 
-  update(input: InputHandler, deltaTime: number) {
-    if (this.game.debug) {
-      console.log("this.currentState :>> ", this.currentState);
-      console.log("this.speedX :>> ", this.speedX);
-      console.log("this.speedY :>> ", this.speedY);
-      console.log("this.traveledX :>> ", this.traveledX);
-    }
-
-    this.lastAttack -= deltaTime;
-    this.lastJump += deltaTime;
-    this.traveledX += this.speedX;
-
-    // if not in special state (attacking, jumping), using generic inputs from player
-    if (this.specialStates.includes(this.currentState.state)) {
-      this.currentState.handleInput(input);
-    } else {
-      this.handleInput(input);
-    }
-
-    if (!this.attackIndicated && this.lastAttack - 200 <= this.game.deltaTime) {
-      this.soundAxeReady.play();
-      this.attackIndicated = true;
-    }
-
-    this.checkCollision();
-    this.checkBoundaries();
-    this.animateSpritesheet(deltaTime);
-    if(this.healthpoints <= 0 && this.game.gameStarted) this.game.gameOver = true;
-  }
-
   checkGainLife() {
     if (
       this.readyToGainLife &&
@@ -350,11 +350,6 @@ export class Player {
     } else {
       this.readyToGainLife = true;
     }
-  }
-
-  setState(state: number) {
-    this.currentState = this.states[state];
-    this.currentState.enter();
   }
 
   checkCollision() {
@@ -384,7 +379,7 @@ export class Player {
           this.game.displayHearts();
         } else if (this.currentState === this.states[STATES.ATTACKING]) {
           if (!enemy.hurt) {
-            this.game.score += 2;
+            this.game.score++;
             this.checkGainLife();
           }
 
@@ -399,6 +394,11 @@ export class Player {
         }
       }
     });
+  }
+
+  setState(state: number) {
+    this.currentState = this.states[state];
+    this.currentState.enter();
   }
 
   onGround() {

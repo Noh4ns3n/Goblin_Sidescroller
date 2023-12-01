@@ -137,19 +137,30 @@ export class Game {
   }
 
   handleEnemies(deltaTime: number) {
-    
     if (this.enemyTimer > this.enemyInterval + this.randomEnemyInterval) {
       this.enemies.push(new Enemy(this));
-     
+
       // max random enemy interval reduction based on score
-      if(this.score <= 200) {
+      if (this.score <= 100) {
         this.randomEnemyInterval = Math.random() * 1000;
-      }
-      else if(this.score <= 400) {
-        this.randomEnemyInterval = Math.random() * 750;
-      }
-      else {
+      } else if (this.score <= 200) {
+        this.randomEnemyInterval = Math.random() * 900;
+      } else if (this.score <= 300) {
+        this.randomEnemyInterval = Math.random() * 800;
+      } else if (this.score <= 400) {
+        this.randomEnemyInterval = Math.random() * 700;
+      } else if (this.score <= 500) {
+        this.randomEnemyInterval = Math.random() * 600;
+      } else if (this.score <= 600) {
         this.randomEnemyInterval = Math.random() * 500;
+      } else if (this.score <= 700) {
+        this.randomEnemyInterval = Math.random() * 400;
+      } else if (this.score <= 800) {
+        this.randomEnemyInterval = Math.random() * 300;
+      } else if (this.score <= 900) {
+        this.randomEnemyInterval = Math.random() * 200;
+      } else {
+        this.randomEnemyInterval = Math.random() * 100;
       }
 
       this.enemyTimer = 0;
@@ -165,7 +176,7 @@ export class Game {
 
   reduceEnemyInterval() {
     // enemyInterval 10% reduction every 20 score points
-    if (this.score > this.lastScore + 5) {
+    if (this.score > this.lastScore + 10) {
       this.lastScore = this.score;
       this.enemyInterval *= 0.9;
     }
@@ -235,16 +246,16 @@ export class Game {
       let drawnHearts: number = 0;
 
       for (let i: number = 0; i < this.player.startingHealthpoints / 2; i++) {
-        let index: number = drawnHearts <= 8 ? i : i - 9;
+        let index: number = drawnHearts <= 11 ? i : i - 12;
 
         let positionY: number =
-          drawnHearts > 8
+          drawnHearts > 11
             ? CANVAS2_HEIGHT / 1.5 - imgWidth / 2
             : CANVAS2_HEIGHT / 3 - imgWidth / 2;
 
         // positionX = ( sizeCanvas - ( sizeImage * numberImages ) / 2 ) + ( indexImage * sizeImage )
         let positionX: number =
-          CANVAS2_WIDTH - imgWidth * 10 + index * imgWidth;
+          CANVAS2_WIDTH - imgWidth * 12.5 + index * imgWidth;
 
         if (fullHearts > 0) {
           fullHearts--;
@@ -308,16 +319,20 @@ export class Game {
     this.context2.clearRect(0, 0, this.width / 3, this.height);
     this.context2.font = "40px silkscreen";
 
-    if (this.score >= 400) {
+    if (this.score >= 800) {
       this.context2.fillStyle = "deeppink";
-    } else if (this.score >= 300) {
+    } else if (this.score >= 600) {
       this.context2.fillStyle = "darkorange";
-    } else if (this.score >= 200) {
+    } else if (this.score >= 400) {
       this.context2.fillStyle = "darkmagenta";
-    } else if (this.score >= 100) {
+    } else if (this.score >= 300) {
       this.context2.fillStyle = "dodgerblue";
-    } else if (this.score >= 50) {
+    } else if (this.score >= 200) {
+      this.context2.fillStyle = "lime";
+    } else if (this.score >= 100) {
       this.context2.fillStyle = "forestgreen";
+    } else if (this.score >= 50) {
+      this.context2.fillStyle = "yellow";
     } else {
       this.context2.fillStyle = "white";
     }
@@ -391,11 +406,10 @@ export class Game {
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
 
-    if(this.debug) {
-      console.log('this.randomEnemyInterval :>> ', this.randomEnemyInterval);
-      console.log('this.enemyInterval :>> ', this.enemyInterval);
+    if (this.debug) {
+      console.log("this.randomEnemyInterval :>> ", this.randomEnemyInterval);
+      console.log("this.enemyInterval :>> ", this.enemyInterval);
     }
-
 
     if (!this.musicStarted && this.player.traveledX !== 0) {
       this.playMusic();
