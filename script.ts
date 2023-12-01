@@ -1,6 +1,5 @@
-// WIP : add vertical movement to jumping state --- ??? why is velocity increased twice ???
-// add sound
-// Game is being sent everywhere + I don't want more than one instance -> make it a Singleton
+// Game is being sent everywhere + I don't want more than one instance -> make it a Singleton ?
+// Add player stats / spritesheet props as classes
 
 import { CANVAS2_HEIGHT, CANVAS2_WIDTH, CANVAS_HEIGHT, CANVAS_WIDTH } from "./const/const";
 import { Game } from "./model/Game";

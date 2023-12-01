@@ -137,10 +137,21 @@ export class Game {
   }
 
   handleEnemies(deltaTime: number) {
-    // enemyInterval 10% reduction every 20 score points
+    
     if (this.enemyTimer > this.enemyInterval + this.randomEnemyInterval) {
       this.enemies.push(new Enemy(this));
-      this.randomEnemyInterval = Math.random() * 1000;
+     
+      // max random enemy interval reduction based on score
+      if(this.score <= 200) {
+        this.randomEnemyInterval = Math.random() * 1000;
+      }
+      else if(this.score <= 400) {
+        this.randomEnemyInterval = Math.random() * 750;
+      }
+      else {
+        this.randomEnemyInterval = Math.random() * 500;
+      }
+
       this.enemyTimer = 0;
     } else {
       this.enemyTimer += deltaTime;
@@ -153,6 +164,7 @@ export class Game {
   }
 
   reduceEnemyInterval() {
+    // enemyInterval 10% reduction every 20 score points
     if (this.score > this.lastScore + 5) {
       this.lastScore = this.score;
       this.enemyInterval *= 0.9;
@@ -378,6 +390,12 @@ export class Game {
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
+
+    if(this.debug) {
+      console.log('this.randomEnemyInterval :>> ', this.randomEnemyInterval);
+      console.log('this.enemyInterval :>> ', this.enemyInterval);
+    }
+
 
     if (!this.musicStarted && this.player.traveledX !== 0) {
       this.playMusic();
