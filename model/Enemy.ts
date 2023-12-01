@@ -78,7 +78,6 @@ export class Enemy {
     this.facing = "L";
     this.hasGrunted = false;
     this.deathSounds = this.game.boarDeathSounds;
-
     this.images = {
       still: {
         L: null,
@@ -106,6 +105,11 @@ export class Enemy {
       },
     };
 
+    this.prepareImages();
+
+  }
+
+  prepareImages() {
     this.images.still.L = new Image(60, 45);
     this.images.still.L.src =
       "assets/img/characters/boar/boar_still_L_spritesheet.png";
@@ -155,31 +159,6 @@ export class Enemy {
       "assets/img/characters/boar/boar_dying_R_spritesheet.png";
   }
 
-  draw(context: CanvasRenderingContext2D) {
-    if (this.game.debug) {
-      context.beginPath();
-      context.arc(
-        this.x + this.width / this.hitboxXOffset,
-        this.y + this.height / this.hitboxYOffset,
-        this.hitboxRadius,
-        0,
-        Math.PI * 2
-      );
-      context.stroke();
-    }
-    context.drawImage(
-      this.images[this.animation][this.facing],
-      this.frameCol * this.sourceWidth, //sx
-      this.frameRow * this.sourceHeight, //sy
-      this.sourceWidth, //sw
-      this.sourceHeight, //sh
-      this.x,
-      this.y,
-      this.width,
-      this.height
-    );
-  }
-
   playSound() {
     if (!this.hasGrunted) {
       this.hasGrunted = true;
@@ -205,8 +184,32 @@ export class Enemy {
     }
   }
 
-  update(deltaTime: number) {
-    // animation
+  draw(context: CanvasRenderingContext2D) {
+    if (this.game.debug) {
+      context.beginPath();
+      context.arc(
+        this.x + this.width / this.hitboxXOffset,
+        this.y + this.height / this.hitboxYOffset,
+        this.hitboxRadius,
+        0,
+        Math.PI * 2
+      );
+      context.stroke();
+    }
+    context.drawImage(
+      this.images[this.animation][this.facing],
+      this.frameCol * this.sourceWidth, //sx
+      this.frameRow * this.sourceHeight, //sy
+      this.sourceWidth, //sw
+      this.sourceHeight, //sh
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
+  }
+
+  animateSpritesheet(deltaTime: number) {
     // update enemy frame only when above fps interval
     if (this.frameTimer > 1000 / this.fps) {
       // if reached end of spritesheet, repositions to start of spritesheet
@@ -222,14 +225,9 @@ export class Enemy {
     } else {
       this.frameTimer += deltaTime;
     }
+  }
 
-    if (this.hurt) {
-      this.hurtTimer += this.game.deltaTime;
-      if (this.hurtTimer >= this.deathTimer) {
-        this.markedForDeletion = true;
-      }
-    }
-
+  movement() {
     // horizontal movement
     if (
       this.game.player.x === this.game.player.rightLimit &&
@@ -242,11 +240,23 @@ export class Enemy {
     } else {
       this.x -= this.speedX * this.game.speed * (this.game.deltaTime / 6);
     }
-    this.checkForDeletion();
+  }
+
+  update(deltaTime: number) {
+    this.movement();
+    this.animateSpritesheet(deltaTime);
     this.checkForCoward();
+
+    if (this.hurt) {
+      this.hurtTimer += this.game.deltaTime;
+      if (this.hurtTimer >= this.deathTimer) {
+        this.markedForDeletion = true;
+      }
+    }
+
+    this.checkForDeletion();
   }
 }
-
 export class RedBoar extends Enemy {
   constructor(game: Game) {
     super(game);

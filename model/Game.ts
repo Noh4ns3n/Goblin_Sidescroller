@@ -88,16 +88,27 @@ export class Game {
     this.playerLastHealth = this.player.startingHealthpoints;
   }
 
-  playMusic() {
-    this.music.play();
-    this.music.addEventListener(
-      "ended",
-      function () {
-        this.currentTime = 0;
-        this.play();
-      },
-      false
-    );
+  resetGame() {
+    this.context.clearRect(0, 0, this.width, this.height);
+    this.enemies = [];
+    this.input = new InputHandler(this);
+    this.background = new Background();
+
+    this.player.healthpoints = 6;
+    this.player.x = this.player.game.width / 3 - this.player.width / 2;
+    this.player.y = this.player.groundLimit;
+    this.player.lastJump = this.player.jumpCooldown;
+    this.player.lastAttack = 0;
+    this.player.attackIndicated = true;
+    this.player.currentState = this.player.states[STATES.PREPARING];
+    this.player.facing = "R"; // R = right, L = left
+    this.player.animation = "still";
+
+    this.gameOver = false;
+    this.gameStarted = false;
+    this.enemyInterval = 1000;
+    this.score = 0;
+    this.animatePreparation(0);
   }
 
   prepareHUDImages(keyword: string): HTMLImageElement[] {
@@ -111,6 +122,18 @@ export class Game {
       imagesHUD[2].width = 50;
       return imagesHUD;
     }
+  }
+
+  playMusic() {
+    this.music.play();
+    this.music.addEventListener(
+      "ended",
+      function () {
+        this.currentTime = 0;
+        this.play();
+      },
+      false
+    );
   }
 
   handleEnemies(deltaTime: number) {
@@ -129,28 +152,50 @@ export class Game {
     });
   }
 
-  handleVictory() {
-    // TODO change this
-    const spanVictory: HTMLSpanElement = document.getElementById("spanVictory");
-    const spanVictory2: HTMLSpanElement =
-      document.getElementById("spanVictory");
-    const pVictory: HTMLElement = document.getElementById("pVictory");
-    const pVictory2: HTMLElement = document.getElementById("pVictory2");
-    const message: string = "Bravo !";
-
-    if (this.score >= 20) {
-      document.body.style.color = "green";
-      pVictory.style.top = "-25%";
-      pVictory.style.fontSize = "80px";
-      spanVictory.innerHTML = message;
-    } else {
-      this.grayscaleCanvas();
-      const message: string = "Perdu !";
-      document.body.style.color = "darkred";
-      pVictory.style.top = "-25%";
-      pVictory.style.fontSize = "80px";
-      spanVictory.innerHTML = message;
+  reduceEnemyInterval() {
+    if (this.score > this.lastScore + 5) {
+      this.lastScore = this.score;
+      this.enemyInterval *= 0.9;
     }
+  }
+
+  grayscaleCanvas() {
+    const imageData: ImageData = this.context.getImageData(
+      0,
+      0,
+      this.width,
+      this.height
+    ) as ImageData;
+    const data: Uint8ClampedArray = imageData.data as Uint8ClampedArray;
+    for (let i = 0; i < data.length; i += 4) {
+      const luminance: number =
+        0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      data[i] = luminance;
+      data[i + 1] = luminance;
+      data[i + 2] = luminance;
+    }
+    this.context.putImageData(imageData, 0, 0);
+  }
+
+  displayGameOver() {
+    this.context2.clearRect(
+      CANVAS2_WIDTH / 3,
+      0,
+      CANVAS2_WIDTH,
+      CANVAS2_HEIGHT
+    );
+    this.context2.font = "40px silkscreen";
+    this.context2.fillStyle = "darkred";
+    this.context2.fillText(
+      "GAME OVER !",
+      CANVAS2_WIDTH * 0.5 - 50,
+      CANVAS2_HEIGHT * 0.33
+    );
+    this.context2.fillText(
+      "PRESS R TO RESTART",
+      CANVAS2_WIDTH * 0.5 - 150,
+      CANVAS2_HEIGHT * 0.9
+    );
   }
 
   displayHearts() {
@@ -224,63 +269,6 @@ export class Game {
     }
   }
 
-  reduceEnemyInterval() {
-    if (this.score > this.lastScore + 5) {
-      this.lastScore = this.score;
-      this.enemyInterval *= 0.9;
-    }
-  }
-
-  grayscaleCanvas() {
-    const imageData: ImageData = this.context.getImageData(
-      0,
-      0,
-      this.width,
-      this.height
-    ) as ImageData;
-    const data: Uint8ClampedArray = imageData.data as Uint8ClampedArray;
-    for (let i = 0; i < data.length; i += 4) {
-      const luminance: number =
-        0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      data[i] = luminance;
-      data[i + 1] = luminance;
-      data[i + 2] = luminance;
-    }
-    this.context.putImageData(imageData, 0, 0);
-  }
-
-  displayGameOver() {
-    this.context2.clearRect(
-      CANVAS2_WIDTH / 3,
-      0,
-      CANVAS2_WIDTH,
-      CANVAS2_HEIGHT
-    );
-    this.context2.font = "40px silkscreen";
-    this.context2.fillStyle = "darkred";
-    this.context2.fillText(
-      "GAME OVER !",
-      CANVAS2_WIDTH * 0.5 - 50,
-      CANVAS2_HEIGHT * 0.33
-    );
-    this.context2.fillText(
-      "PRESS R TO RESTART",
-      CANVAS2_WIDTH * 0.5 - 150,
-      CANVAS2_HEIGHT * 0.9
-      );
-  }
-
-  animateHUD() {
-    if (this.gameOver) {
-      this.displayGameOver();
-    } else if (this.player.currentState.state === "PREPARING") {
-      this.displayCommands();
-    } else {
-      this.displayHearts();
-      this.displayStatusText();
-    }
-  }
-
   displayCommands() {
     this.context2.clearRect(0, 0, this.width, this.height);
     this.context2.font = "40px silkscreen";
@@ -304,6 +292,47 @@ export class Game {
     );
   }
 
+  displayStatusText() {
+    this.context2.clearRect(0, 0, this.width / 3, this.height);
+    this.context2.font = "40px silkscreen";
+
+    if (this.score >= 400) {
+      this.context2.fillStyle = "deeppink";
+    } else if (this.score >= 300) {
+      this.context2.fillStyle = "darkorange";
+    } else if (this.score >= 200) {
+      this.context2.fillStyle = "darkmagenta";
+    } else if (this.score >= 100) {
+      this.context2.fillStyle = "dodgerblue";
+    } else if (this.score >= 50) {
+      this.context2.fillStyle = "forestgreen";
+    } else {
+      this.context2.fillStyle = "white";
+    }
+    this.context2.fillText(
+      `${this.score.toString()}`,
+      CANVAS2_WIDTH / 6 - 70,
+      CANVAS2_HEIGHT / 3 + 13
+    );
+    this.context2.font = "25px silkscreen";
+    this.context2.fillText(
+      `score`,
+      CANVAS2_WIDTH / 6 - 70,
+      CANVAS2_HEIGHT * 0.75 + 13
+    );
+  }
+
+  animateHUD() {
+    if (this.gameOver) {
+      this.displayGameOver();
+    } else if (this.player.currentState.state === "PREPARING") {
+      this.displayCommands();
+    } else {
+      this.displayHearts();
+      this.displayStatusText();
+    }
+  }
+
   animateGameOver = (timeStamp: number) => {
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
@@ -321,38 +350,16 @@ export class Game {
       requestAnimationFrame(this.animateGameOver);
   };
 
-  resetGame() {
-    this.context.clearRect(0, 0, this.width, this.height);
-    this.enemies = [];
-    this.input = new InputHandler(this);
-    this.background = new Background();
-
-    this.player.healthpoints = this.player.startingHealthpoints;
-    this.player.x = this.player.game.width / 3 - this.player.width / 2;
-    this.player.y = this.player.groundLimit;
-    this.player.lastJump = this.player.jumpCooldown;
-    this.player.lastAttack = 0;
-    this.player.attackIndicated = true;
-    this.player.currentState = this.player.states[STATES.PREPARING];
-    this.player.facing = "R"; // R = right, L = left
-    this.player.animation = "still";
-
-    this.gameOver = false;
-    this.gameStarted = false;
-    this.enemyInterval = 1000;
-    this.score = 0;
-    this.animatePreparation(0);
-  }
-
   animatePreparation = (timeStamp: number) => {
+    this.deltaTime = timeStamp - this.lastTime;
+    this.lastTime = timeStamp;
+
     if (!this.musicStarted && this.player.traveledX !== 0) {
       this.playMusic();
       this.musicStarted = true;
     }
 
     this.context.clearRect(0, 0, this.width, this.height);
-    this.deltaTime = timeStamp - this.lastTime;
-    this.lastTime = timeStamp;
     this.background.draw(this.context);
     this.background.update();
     this.player.draw(this.context);
@@ -372,6 +379,11 @@ export class Game {
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
 
+    if (!this.musicStarted && this.player.traveledX !== 0) {
+      this.playMusic();
+      this.musicStarted = true;
+    }
+
     if (this.lastFrame > 1000 / this.framerate) {
       this.context.clearRect(0, 0, this.width, this.height);
       this.background.draw(this.context);
@@ -389,34 +401,4 @@ export class Game {
       this.animateGameOver(0);
     } else requestAnimationFrame(this.animate);
   };
-
-  displayStatusText() {
-    this.context2.clearRect(0, 0, this.width / 3, this.height);
-    this.context2.font = "40px silkscreen";
-
-    if (this.score > 400) {
-      this.context2.fillStyle = "cyan";
-    } else if (this.score > 300) {
-      this.context2.fillStyle = "deeppink";
-    } else if (this.score > 200) {
-      this.context2.fillStyle = "darkorange";
-    } else if (this.score > 100) {
-      this.context2.fillStyle = "darkmagenta";
-    } else if (this.score > 50) {
-      this.context2.fillStyle = "dodgerblue";
-    } else {
-      this.context2.fillStyle = "white";
-    }
-    this.context2.fillText(
-      `${this.score.toString()}`,
-      CANVAS2_WIDTH / 6 - 70,
-      CANVAS2_HEIGHT / 3 + 13
-    );
-    this.context2.font = "25px silkscreen";
-    this.context2.fillText(
-      `score`,
-      CANVAS2_WIDTH / 6 - 70,
-      CANVAS2_HEIGHT * 0.75 + 13
-    );
-  }
 }

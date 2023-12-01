@@ -32,7 +32,6 @@ class Running extends State {
   }
   handleInput(input: InputHandler) {}
 }
-
 class Jumping extends State {
   game: Game;
   constructor(game) {
@@ -134,7 +133,6 @@ class Falling extends State {
     }
   }
 }
-
 class Attacking extends State {
   game: Game;
   attackTimer: number;
