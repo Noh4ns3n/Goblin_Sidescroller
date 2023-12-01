@@ -175,10 +175,10 @@ export class Game {
   }
 
   reduceEnemyInterval() {
-    // enemyInterval 10% reduction every 20 score points
+    // enemyInterval 5% reduction every 10 score points
     if (this.score > this.lastScore + 10) {
       this.lastScore = this.score;
-      this.enemyInterval *= 0.9;
+      this.enemyInterval *= 0.95;
     }
   }
 
@@ -306,12 +306,12 @@ export class Game {
       CANVAS2_WIDTH * 0.5 - 180,
       CANVAS2_HEIGHT * 0.25
     );
-    this.context.font = "40px silkscreen";
+    this.context.font = "50px silkscreen";
     this.context.fillStyle = "black";
     this.context.fillText(
       "PRESS R TO START",
-      CANVAS_WIDTH * 0.5 - 210,
-      CANVAS_HEIGHT * 0.25
+      CANVAS_WIDTH * 0.5 - 265,
+      CANVAS_HEIGHT * 0.45
     );
   }
 
@@ -319,16 +319,18 @@ export class Game {
     this.context2.clearRect(0, 0, this.width / 3, this.height);
     this.context2.font = "40px silkscreen";
 
-    if (this.score >= 800) {
+    if (this.score >= 1000) {
       this.context2.fillStyle = "deeppink";
-    } else if (this.score >= 600) {
-      this.context2.fillStyle = "darkorange";
-    } else if (this.score >= 400) {
-      this.context2.fillStyle = "darkmagenta";
-    } else if (this.score >= 300) {
-      this.context2.fillStyle = "dodgerblue";
-    } else if (this.score >= 200) {
+    } else if (this.score >= 800) {
       this.context2.fillStyle = "lime";
+    } else if (this.score >= 600) {
+      this.context2.fillStyle = "cyan";
+    } else if (this.score >= 400) {
+      this.context2.fillStyle = "darkorange";
+    } else if (this.score >= 300) {
+      this.context2.fillStyle = "darkmagenta";
+    } else if (this.score >= 200) {
+      this.context2.fillStyle = "dodgerblue";
     } else if (this.score >= 100) {
       this.context2.fillStyle = "forestgreen";
     } else if (this.score >= 50) {
