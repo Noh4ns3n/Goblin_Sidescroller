@@ -25,41 +25,7 @@ body {
 }
 
 #canvas2 {
-    /* border: 5px solid white; */
+    margin-top: 20px;
+    /* background:rgba(255,255,255,0.1) */
 }
-
-#pScore {
-    position:relative;
-    text-align:center;  
-    font-family: silkscreen;
-    font-size: 40px;
-    margin-block-start: 20px;
-    margin-block-end: 0px;
-}
-
-#pVictory2 {
-    color:black;
-    position: absolute;
-    width:120%;
-    top: -20%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    text-align:center;
-    font-family: silkscreen;
-    font-size: 40px;
-    z-index:1;
-}
-
-#pVictory {
-    position: absolute;
-    width:120%;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-52%);
-    text-align:center;
-    font-family: silkscreen;
-    font-size: 40px;
-    z-index:2;
-}
-
 

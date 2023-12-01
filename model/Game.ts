@@ -33,7 +33,7 @@ export class Game {
   score: number;
   speed: number;
   gameOver: boolean;
-  gameStarted:boolean;
+  gameStarted: boolean;
   victory: boolean;
   spanScore: HTMLSpanElement;
   boarDeathSounds: HTMLAudioElement[];
@@ -129,7 +129,8 @@ export class Game {
     });
   }
 
-  handleVictory() { // TODO change this
+  handleVictory() {
+    // TODO change this
     const spanVictory: HTMLSpanElement = document.getElementById("spanVictory");
     const spanVictory2: HTMLSpanElement =
       document.getElementById("spanVictory");
@@ -161,47 +162,63 @@ export class Game {
       this.lastTime < 1000
     ) {
       this.playerLastHealth = this.player.healthpoints;
-      this.context2.clearRect(0, 0, CANVAS2_WIDTH, CANVAS2_HEIGHT);
+      this.context2.clearRect(
+        CANVAS2_WIDTH / 3,
+        0,
+        CANVAS2_WIDTH,
+        CANVAS2_HEIGHT
+      );
       let fullHearts: number = Math.floor(this.player.healthpoints / 2);
       let halfHeart: number = this.player.healthpoints % 2 === 1 ? 1 : 0;
       let emptyHearts: number =
         this.player.startingHealthpoints / 2 - fullHearts - halfHeart;
-      const imgWidth: number = this.heartImages[IMG_HEARTS.FULL].width;
-      const positionY: number = CANVAS2_HEIGHT / 2 - imgWidth / 2;
+      const imgWidth: number = 40;
+      const imgHeight: number = 40;
+
+      let drawnHearts: number = 0;
 
       for (let i: number = 0; i < this.player.startingHealthpoints / 2; i++) {
+        let index: number = drawnHearts <= 8 ? i : i - 9;
+
+        let positionY: number =
+          drawnHearts > 8
+            ? CANVAS2_HEIGHT / 1.5 - imgWidth / 2
+            : CANVAS2_HEIGHT / 3 - imgWidth / 2;
+
         // positionX = ( sizeCanvas - ( sizeImage * numberImages ) / 2 ) + ( indexImage * sizeImage )
         let positionX: number =
-          (CANVAS2_WIDTH - (imgWidth * this.player.startingHealthpoints) / 2) /
-            2 +
-          i * imgWidth;
+          CANVAS2_WIDTH - imgWidth * 10 + index * imgWidth;
+
         if (fullHearts > 0) {
           fullHearts--;
           this.context2.drawImage(
             this.heartImages[IMG_HEARTS.FULL],
             positionX,
             positionY,
-            50,
-            50
+            imgWidth,
+            imgHeight
           );
+          drawnHearts++;
         } else if (halfHeart > 0) {
           halfHeart--;
           this.context2.drawImage(
             this.heartImages[IMG_HEARTS.HALF],
             positionX,
             positionY,
-            50,
-            50
+            imgWidth,
+            imgHeight
           );
+          drawnHearts++;
         } else if (emptyHearts > 0) {
           emptyHearts--;
           this.context2.drawImage(
             this.heartImages[IMG_HEARTS.EMPTY],
             positionX,
             positionY,
-            50,
-            50
+            imgWidth,
+            imgHeight
           );
+          drawnHearts++;
         }
       }
     }
@@ -210,10 +227,7 @@ export class Game {
   reduceEnemyInterval() {
     if (this.score > this.lastScore + 5) {
       this.lastScore = this.score;
-      // this.enemyIntervalReduction = Math.floor(this.score / 20) * 10;
-      // this.enemyInterval = this.enemyInterval * (1 - this.enemyIntervalReduction / 100);
       this.enemyInterval *= 0.9;
-      console.log("this.enemyInterval :>> ", this.enemyInterval);
     }
   }
 
@@ -235,34 +249,84 @@ export class Game {
     this.context.putImageData(imageData, 0, 0);
   }
 
-  animateGameOver = (timeStamp:number) => {
-    this.player.setState(STATES.PREPARING);
-    console.log('this.player.currentState.state :>> ', this.player.currentState.state);
+  displayGameOver() {
+    this.context2.clearRect(
+      CANVAS2_WIDTH / 3,
+      0,
+      CANVAS2_WIDTH,
+      CANVAS2_HEIGHT
+    );
+    this.context2.font = "40px silkscreen";
+    this.context2.fillStyle = "darkred";
+    this.context2.fillText(
+      "GAME OVER !",
+      CANVAS2_WIDTH * 0.5 - 50,
+      CANVAS2_HEIGHT * 0.33
+    );
+    this.context2.fillText(
+      "PRESS R TO RESTART",
+      CANVAS2_WIDTH * 0.5 - 150,
+      CANVAS2_HEIGHT * 0.9
+      );
+  }
+
+  animateHUD() {
+    if (this.gameOver) {
+      this.displayGameOver();
+    } else if (this.player.currentState.state === "PREPARING") {
+      this.displayCommands();
+    } else {
+      this.displayHearts();
+      this.displayStatusText();
+    }
+  }
+
+  displayCommands() {
+    this.context2.clearRect(0, 0, this.width, this.height);
+    this.context2.font = "40px silkscreen";
+    this.context2.fillStyle = "green";
+    this.context2.fillText(
+      "MOVE WITH ARROWS",
+      CANVAS2_WIDTH * 0.5 - 230,
+      CANVAS2_HEIGHT * 0.75
+    );
+    this.context2.fillText(
+      "ATTACK WITH A",
+      CANVAS2_WIDTH * 0.5 - 180,
+      CANVAS2_HEIGHT * 0.25
+    );
+    this.context.font = "40px silkscreen";
+    this.context.fillStyle = "black";
+    this.context.fillText(
+      "PRESS R TO START",
+      CANVAS_WIDTH * 0.5 - 210,
+      CANVAS_HEIGHT * 0.25
+    );
+  }
+
+  animateGameOver = (timeStamp: number) => {
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
-    this.grayscaleCanvas();
+
+    if (this.player.currentState.state !== "PREPARING") {
+      this.player.setState(STATES.PREPARING);
+    }
+
     this.player.update(this.input, this.deltaTime);
-    this.context.font = "40px silkscreen";
-    this.context.fillStyle = "red";
-    this.context.fillText("GAME OVER", this.width / 4, this.height / 2.5);
-    this.context.fillText("PRESS R TO RESTART", this.width / 4, this.height / 2);
-    console.log('this.gameOver :>> ', this.gameOver);
-    if(this.gameOver && this.gameStarted) requestAnimationFrame(this.animateGameOver);
-    // if(!this.gameStarted) {
-    //   requestAnimationFrame(this.animateGameOver);
-    // }
-    // else {
-    //   this.animatePreparation(0);
-    // }
-  }
+    this.grayscaleCanvas();
+    this.animateHUD();
+
+    if (this.gameOver && this.gameStarted)
+      requestAnimationFrame(this.animateGameOver);
+  };
 
   resetGame() {
     this.context.clearRect(0, 0, this.width, this.height);
     this.enemies = [];
     this.input = new InputHandler(this);
     this.background = new Background();
-  
+
     this.player.healthpoints = this.player.startingHealthpoints;
     this.player.x = this.player.game.width / 3 - this.player.width / 2;
     this.player.y = this.player.groundLimit;
@@ -270,6 +334,8 @@ export class Game {
     this.player.lastAttack = 0;
     this.player.attackIndicated = true;
     this.player.currentState = this.player.states[STATES.PREPARING];
+    this.player.facing = "R"; // R = right, L = left
+    this.player.animation = "still";
 
     this.gameOver = false;
     this.gameStarted = false;
@@ -278,35 +344,34 @@ export class Game {
     this.animatePreparation(0);
   }
 
-  animatePreparation = (timeStamp:number) => {
+  animatePreparation = (timeStamp: number) => {
+    if (!this.musicStarted && this.player.traveledX !== 0) {
+      this.playMusic();
+      this.musicStarted = true;
+    }
+
     this.context.clearRect(0, 0, this.width, this.height);
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
-    this.lastFrame += this.deltaTime;
     this.background.draw(this.context);
     this.background.update();
     this.player.draw(this.context);
     this.player.update(this.input, this.deltaTime);
-    this.context.font = "40px silkscreen";
-    this.context.fillStyle = "black";
-    this.context.fillText("ATTACK WITH A", this.width / 4, this.height / 2.5);
-    this.context.fillText("MOVE WITH ARROWS", this.width / 4, this.height / 2);
-    if(!this.gameStarted) {
+
+    this.animateHUD();
+
+    if (!this.gameStarted) {
       requestAnimationFrame(this.animatePreparation);
     } else {
       this.animate(0);
     }
-  }
+  };
 
   animate = (timeStamp: number) => {
     this.deltaTime = timeStamp - this.lastTime;
     this.lastTime = timeStamp;
     this.lastFrame += this.deltaTime;
 
-    if (this.score > 0 && !this.musicStarted) {
-      this.playMusic();
-      this.musicStarted = true;
-    }
     if (this.lastFrame > 1000 / this.framerate) {
       this.context.clearRect(0, 0, this.width, this.height);
       this.background.draw(this.context);
@@ -317,21 +382,41 @@ export class Game {
       this.displayStatusText();
       this.lastFrame = 0;
     }
-    this.displayHearts();
+
+    this.animateHUD();
+
     if (this.gameOver) {
       this.animateGameOver(0);
     } else requestAnimationFrame(this.animate);
-
   };
 
   displayStatusText() {
-    this.spanScore.innerHTML = `${this.score.toString()} ${
-      this.debug
-        ? "</br> FPS : " +
-          Math.floor(1000 / this.deltaTime) +
-          " State : " +
-          this.player.currentState.state
-        : ""
-    }`;
+    this.context2.clearRect(0, 0, this.width / 3, this.height);
+    this.context2.font = "40px silkscreen";
+
+    if (this.score > 400) {
+      this.context2.fillStyle = "cyan";
+    } else if (this.score > 300) {
+      this.context2.fillStyle = "deeppink";
+    } else if (this.score > 200) {
+      this.context2.fillStyle = "darkorange";
+    } else if (this.score > 100) {
+      this.context2.fillStyle = "darkmagenta";
+    } else if (this.score > 50) {
+      this.context2.fillStyle = "dodgerblue";
+    } else {
+      this.context2.fillStyle = "white";
+    }
+    this.context2.fillText(
+      `${this.score.toString()}`,
+      CANVAS2_WIDTH / 6 - 70,
+      CANVAS2_HEIGHT / 3 + 13
+    );
+    this.context2.font = "25px silkscreen";
+    this.context2.fillText(
+      `score`,
+      CANVAS2_WIDTH / 6 - 70,
+      CANVAS2_HEIGHT * 0.75 + 13
+    );
   }
 }

@@ -201,29 +201,19 @@ class Preparing extends State {
   }
   enter() {
     this.game.player.animation = "still";
-    // if(this.game.gameOver === true) {
-    //   this.game.gameStarted = false;
-    //   this.game.score = 0;
-    //   this.game.enemies = [];
-    //   this.game.player.startingHealthpoints = 6;
-    //   this.game.player.healthpoints = this.game.player.startingHealthpoints;
-    //   this.game.grayscaleCanvas();
-    // }
   }
   handleInput(input: InputHandler) {
     this.attackTimer -= this.game.deltaTime;
-    
+
     // special state before game starts
     if (input.keys.includes("r")) {
-      if(this.game.gameOver === true) {
+      if (this.game.gameOver === true) {
         this.game.resetGame();
-        this.game.gameStarted = false;
-        this.game.gameOver = false;
-        this.game.animatePreparation(0);
+      } else {
+        this.game.context.clearRect(0, 0, this.game.width, this.game.height);
+        this.game.gameStarted = true;
+        this.game.player.setState(STATES.STILL);
       }
-      this.game.context.clearRect(0, 0, this.game.width, this.game.height);
-      this.game.gameStarted = true;
-      this.game.player.setState(STATES.STILL);
     }
 
     // horizontal movement (speedXAirModifier)
@@ -250,9 +240,9 @@ class Preparing extends State {
       this.game.player.speedY -= 20;
     }
 
-     // update position
-     this.game.player.x += this.game.player.speedX * (this.game.deltaTime / 8);
-     this.game.player.y += this.game.player.speedY * (this.game.deltaTime / 10);
+    // update position
+    this.game.player.x += this.game.player.speedX * (this.game.deltaTime / 8);
+    this.game.player.y += this.game.player.speedY * (this.game.deltaTime / 10);
 
     if (!this.game.player.onGround()) {
       this.game.player.speedY +=
@@ -269,11 +259,15 @@ class Preparing extends State {
     ) {
       this.game.player.frame = 0;
       this.game.player.animation = "attacking";
+      this.game.player.lastAttack = this.game.player.attackCooldown;
+      this.game.player.attackIndicated = false;
+      this.game.player.soundAxeHit.play();
       this.attackTimer = this.game.player.attackDuration;
     }
-    if(this.attackTimer <= this.game.deltaTime) this.game.player.animation = "still";
-
-   
+    if (this.attackTimer <= this.game.deltaTime) {
+      this.game.player.animation = "still";
+      this.attackTimer = this.game.player.attackDuration;
+    }
 
     if (
       this.game.player.speedX === 0 &&
@@ -281,9 +275,6 @@ class Preparing extends State {
     ) {
       this.game.player.animation = "still";
     }
-
-
-   
   }
 }
 

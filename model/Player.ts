@@ -75,7 +75,7 @@ export class Player {
     this.game = game;
     this.facing = "R"; // R = right, L = left
     this.animation = "still";
-    this.startingHealthpoints = 1;
+    this.startingHealthpoints = 6;
     this.healthpoints = this.startingHealthpoints;
     this.readyToGainLife = true;
     this.width = 66; // displayed width
@@ -341,7 +341,7 @@ export class Player {
       this.game.score >= 10 &&
       (this.game.score % 10 === 0 || this.game.score % 10 === 1)
     ) {
-      this.healthpoints++;
+      this.healthpoints+=1;
       this.readyToGainLife = false;
       if (this.healthpoints > this.startingHealthpoints) {
         this.startingHealthpoints = this.healthpoints;

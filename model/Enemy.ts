@@ -184,7 +184,6 @@ export class Enemy {
     if (!this.hasGrunted) {
       this.hasGrunted = true;
       const sound = Math.floor(Math.random() * this.deathSounds.length);
-      console.log("sound :>> ", sound);
       this.deathSounds[sound].play();
     }
   }
