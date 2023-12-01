@@ -172,18 +172,18 @@ class Attacking extends State {
     }
 
     // vertical movement
+    if (!this.game.player.onGround()) {
+      this.game.player.speedY +=
+        this.game.player.weight * (this.game.deltaTime / 10);
+    } else {
+      this.game.player.speedY = 0;
+    }
     if (
       input.keys.includes("ArrowUp") &&
       this.game.player.lastJump > this.game.player.jumpCooldown
     ) {
       this.game.player.lastJump = 0;
       this.game.player.speedY -= 20;
-    }
-    if (!this.game.player.onGround()) {
-      this.game.player.speedY +=
-        this.game.player.weight * (this.game.deltaTime / 10);
-    } else {
-      this.game.player.speedY = 0;
     }
 
     // update position
